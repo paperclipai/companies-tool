@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import * as childProcess from "node:child_process";
 import pc from "picocolors";
 
 export interface CommonPaperclipOptions {
@@ -39,13 +39,43 @@ export function buildCommonPaperclipArgs(options: CommonPaperclipOptions): strin
   return args;
 }
 
+export interface PaperclipCommand {
+  command: string;
+  prefixArgs: string[];
+}
+
+export type SpawnImplementation = typeof childProcess.spawn;
+
+let spawnImplementation: SpawnImplementation = childProcess.spawn;
+
+export function setSpawnImplementationForTests(next: SpawnImplementation | null): void {
+  spawnImplementation = next ?? childProcess.spawn;
+}
+
+export function resolvePaperclipCommand(raw = process.env.PAPERCLIPAI_CMD?.trim()): PaperclipCommand {
+  if (!raw) {
+    return {
+      command: "paperclipai",
+      prefixArgs: [],
+    };
+  }
+
+  const tokens = splitCommandString(raw);
+  const [command, ...prefixArgs] = tokens;
+  if (!command) {
+    throw new Error("PAPERCLIPAI_CMD must not be empty.");
+  }
+
+  return { command, prefixArgs };
+}
+
 export async function runPaperclip(args: string[], options: PaperclipRunOptions = {}): Promise<string> {
   const captureStdout = Boolean(options.captureStdout);
-  const command = process.env.PAPERCLIPAI_CMD?.trim() || "paperclipai";
-  const fullArgs = [...args, ...buildCommonPaperclipArgs(options)];
+  const { command, prefixArgs } = resolvePaperclipCommand();
+  const fullArgs = [...prefixArgs, ...args, ...buildCommonPaperclipArgs(options)];
 
   return await new Promise<string>((resolve, reject) => {
-    const child = spawn(command, fullArgs, {
+    const child = spawnImplementation(command, fullArgs, {
       stdio: captureStdout ? ["inherit", "pipe", "inherit"] : "inherit",
       env: process.env,
       shell: false,
@@ -62,7 +92,7 @@ export async function runPaperclip(args: string[], options: PaperclipRunOptions 
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         reject(
           new Error(
-            `Could not find '${command}'. Install the Paperclip CLI or set PAPERCLIPAI_CMD to the executable path.`,
+            `Could not find '${command}'. Install the Paperclip CLI or set PAPERCLIPAI_CMD to the executable path or command.`,
           ),
         );
         return;
@@ -129,4 +159,62 @@ export function printWarnings(warnings: string[]): void {
 function appendFlag(args: string[], flag: string, value: string | undefined): void {
   if (!value?.trim()) return;
   args.push(flag, value.trim());
+}
+
+function splitCommandString(input: string): string[] {
+  const tokens: string[] = [];
+  let current = "";
+  let quote: "\"" | "'" | null = null;
+  let escaping = false;
+
+  for (const char of input) {
+    if (escaping) {
+      current += char;
+      escaping = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      escaping = true;
+      continue;
+    }
+
+    if (quote) {
+      if (char === quote) {
+        quote = null;
+      } else {
+        current += char;
+      }
+      continue;
+    }
+
+    if (char === "\"" || char === "'") {
+      quote = char;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      if (current) {
+        tokens.push(current);
+        current = "";
+      }
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (escaping) {
+    current += "\\";
+  }
+
+  if (quote) {
+    throw new Error(`Unterminated quote in PAPERCLIPAI_CMD: ${input}`);
+  }
+
+  if (current) {
+    tokens.push(current);
+  }
+
+  return tokens;
 }

@@ -5,16 +5,20 @@ export interface IncludeNormalizationResult {
   warnings: string[];
 }
 
-const PUBLIC_INCLUDE_TOKENS = new Set([
+export const PUBLIC_INCLUDE_VALUES = [
   "company",
   "agents",
   "projects",
   "tasks",
   "issues",
   "skills",
-]);
+ ] as const;
 
-const PAPERCLIP_INCLUDE_ORDER = ["company", "agents", "projects", "issues"] as const;
+export const INCLUDE_OPTION_HELP_TEXT = PUBLIC_INCLUDE_VALUES.join(",");
+
+const PUBLIC_INCLUDE_TOKENS = new Set<string>(PUBLIC_INCLUDE_VALUES);
+
+const PAPERCLIP_INCLUDE_ORDER = ["company", "agents", "projects", "issues", "skills"] as const;
 
 export function normalizeIncludeValues(input: string | undefined): IncludeNormalizationResult {
   const values = (input ?? "company,agents")
@@ -34,13 +38,6 @@ export function normalizeIncludeValues(input: string | undefined): IncludeNormal
 
     if (value === "tasks") {
       normalized.add("issues");
-      continue;
-    }
-
-    if (value === "skills") {
-      warnings.push(
-        "Paperclip does not expose separate skill include toggles yet. Skills currently ride along with the imported/exported company package.",
-      );
       continue;
     }
 

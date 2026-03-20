@@ -95,6 +95,9 @@ npx companies.sh export PAP --out ./exports/pap --include company,agents,project
 # Export tasks for specific projects only
 npx companies.sh export PAP --out ./exports/pap --project-tasks growth-site
 
+# Export specific skills only
+npx companies.sh export PAP --out ./exports/pap --skills company-creator,frontend-design
+
 # Vendor referenced skills into the package
 npx companies.sh export PAP --out ./exports/pap --expand-referenced-skills
 ```
@@ -105,6 +108,7 @@ npx companies.sh export PAP --out ./exports/pap --expand-referenced-skills
 | --- | --- |
 | `--out <path>` | Output directory (required) |
 | `--include <values>` | Comma-separated subset of `company,agents,projects,tasks,issues,skills`. Default: `company,agents` |
+| `--skills <values>` | Export specific skills by selector |
 | `--projects <values>` | Export specific projects by selector |
 | `--tasks <values>` | Export specific tasks by selector |
 | `--project-tasks <values>` | Export tasks belonging to specific projects |
@@ -134,10 +138,16 @@ This CLI keeps the package surface generic while delegating provider-specific wo
 
 ### `paperclipai` not found
 
-The CLI shells out to the `paperclipai` binary. If it is not on your `PATH`, set the `PAPERCLIPAI_CMD` environment variable:
+The CLI shells out to the `paperclipai` command. If it is not on your `PATH`, set the `PAPERCLIPAI_CMD` environment variable:
 
 ```bash
 export PAPERCLIPAI_CMD=/path/to/paperclipai
+```
+
+`PAPERCLIPAI_CMD` can also be a full command with prefix arguments, for example:
+
+```bash
+export PAPERCLIPAI_CMD="pnpm --dir /path/to/paperclip run paperclipai"
 ```
 
 ### Import fails with collision errors
@@ -161,6 +171,23 @@ pnpm install
 pnpm build
 pnpm test
 ```
+
+### Dry-Run Smoke Test
+
+Use this to verify the wrapper can reach a local Paperclip instance without applying writes:
+
+```bash
+export PAPERCLIPAI_CMD="pnpm --dir /path/to/paperclip run paperclipai"
+
+npx companies.sh add paperclipai/company-template \
+  --target new \
+  --dry-run \
+  --yes \
+  --api-base http://127.0.0.1:3103 \
+  --api-key "$PAPERCLIP_API_KEY"
+```
+
+Expected result: the command reaches the Paperclip import preview path and does not create a company because `--dry-run` routes to preview only. Use a board-scoped API key or board-authenticated context for this check because preview endpoints may reject agent-scoped credentials.
 
 ## License
 

@@ -3,8 +3,8 @@
 import { intro, outro, select, text, confirm, isCancel, cancel, note } from "@clack/prompts";
 import { Command } from "commander";
 import pc from "picocolors";
+import { fileURLToPath } from "node:url";
 import {
-  buildCommonPaperclipArgs,
   listPaperclipCompanies,
   printWarnings,
   resolveCompanySelector,
@@ -12,7 +12,12 @@ import {
   type CommonPaperclipOptions,
   type PaperclipCompanyRecord,
 } from "./paperclip.js";
-import { normalizeIncludeValues, normalizeTaskSelectors, resolveProvider } from "./flags.js";
+import {
+  INCLUDE_OPTION_HELP_TEXT,
+  normalizeIncludeValues,
+  normalizeTaskSelectors,
+  resolveProvider,
+} from "./flags.js";
 import { normalizeSourceInput } from "./sources.js";
 
 type TargetMode = "new" | "existing";
@@ -35,11 +40,14 @@ interface AddOptions extends BaseOptions {
 interface ExportOptions extends BaseOptions {
   out?: string;
   include?: string;
+  skills?: string;
   projects?: string;
   tasks?: string;
   projectTasks?: string;
   expandReferencedSkills?: boolean;
 }
+
+const INCLUDE_OPTION_DESCRIPTION = `Comma-separated include set: ${INCLUDE_OPTION_HELP_TEXT}`;
 
 function addCommonOptions(command: Command, opts?: { includeCompanyId?: boolean }): Command {
   const configured = command
@@ -72,7 +80,7 @@ function coerceCancel<T>(value: T | symbol): T {
   return value;
 }
 
-async function pickProvider(current: string | undefined, skipPrompts: boolean): Promise<"paperclip"> {
+export async function pickProvider(current: string | undefined, skipPrompts: boolean): Promise<"paperclip"> {
   if (current?.trim()) {
     return resolveProvider(current);
   }
@@ -95,7 +103,7 @@ async function pickProvider(current: string | undefined, skipPrompts: boolean): 
   return resolveProvider(coerceCancel(result));
 }
 
-async function promptTargetMode(current: TargetMode | undefined, skipPrompts: boolean): Promise<TargetMode> {
+export async function promptTargetMode(current: TargetMode | undefined, skipPrompts: boolean): Promise<TargetMode> {
   if (current) return current;
   if (skipPrompts) return "new";
 
@@ -110,7 +118,7 @@ async function promptTargetMode(current: TargetMode | undefined, skipPrompts: bo
   return coerceCancel(result);
 }
 
-async function promptSource(current: string | undefined, skipPrompts: boolean): Promise<string> {
+export async function promptSource(current: string | undefined, skipPrompts: boolean): Promise<string> {
   if (current?.trim()) return normalizeSourceInput(current);
   if (skipPrompts) {
     throw new Error("A source is required in non-interactive mode.");
@@ -146,7 +154,10 @@ async function promptExistingCompanyId(options: BaseOptions): Promise<string> {
   return coerceCancel(picked).trim();
 }
 
-async function promptNewCompanyName(current: string | undefined, skipPrompts: boolean): Promise<string | undefined> {
+export async function promptNewCompanyName(
+  current: string | undefined,
+  skipPrompts: boolean,
+): Promise<string | undefined> {
   if (current?.trim()) return current.trim();
   if (skipPrompts) return undefined;
 
@@ -164,7 +175,96 @@ async function promptNewCompanyName(current: string | undefined, skipPrompts: bo
   return coerceCancel(result).trim() || undefined;
 }
 
-async function handleAdd(source: string | undefined, options: AddOptions): Promise<void> {
+export function buildAddPaperclipArgs(input: {
+  source: string;
+  includeArg: string;
+  target: TargetMode;
+  agents?: string;
+  collision?: CollisionMode;
+  companyId?: string;
+  newCompanyName?: string;
+  dryRun?: boolean;
+}): string[] {
+  const args = [
+    "company",
+    "import",
+    "--from",
+    input.source,
+    "--include",
+    input.includeArg,
+    "--target",
+    input.target,
+    "--agents",
+    input.agents?.trim() || "all",
+    "--collision",
+    input.collision?.trim() || "rename",
+  ];
+
+  if (input.companyId) {
+    args.push("--company-id", input.companyId);
+  }
+  if (input.newCompanyName) {
+    args.push("--new-company-name", input.newCompanyName);
+  }
+  if (input.dryRun) {
+    args.push("--dry-run");
+  }
+
+  return args;
+}
+
+export function buildListPaperclipArgs(): string[] {
+  return ["company", "list"];
+}
+
+export function buildExportPaperclipArgs(input: {
+  companyId: string;
+  outDir: string;
+  includeArg: string;
+  skills?: string;
+  projects?: string;
+  tasks?: string;
+  projectTasks?: string;
+  expandReferencedSkills?: boolean;
+}): string[] {
+  const args = [
+    "company",
+    "export",
+    input.companyId,
+    "--out",
+    input.outDir,
+    "--include",
+    input.includeArg,
+  ];
+
+  const skills = normalizeTaskSelectors(input.skills);
+  if (skills.length > 0) {
+    args.push("--skills", skills.join(","));
+  }
+
+  const projects = normalizeTaskSelectors(input.projects);
+  if (projects.length > 0) {
+    args.push("--projects", projects.join(","));
+  }
+
+  const tasks = normalizeTaskSelectors(input.tasks);
+  if (tasks.length > 0) {
+    args.push("--issues", tasks.join(","));
+  }
+
+  const projectTasks = normalizeTaskSelectors(input.projectTasks);
+  if (projectTasks.length > 0) {
+    args.push("--project-issues", projectTasks.join(","));
+  }
+
+  if (input.expandReferencedSkills) {
+    args.push("--expand-referenced-skills");
+  }
+
+  return args;
+}
+
+export async function handleAdd(source: string | undefined, options: AddOptions): Promise<void> {
   intro("companies");
 
   const provider = await pickProvider(options.provider, Boolean(options.yes));
@@ -185,30 +285,16 @@ async function handleAdd(source: string | undefined, options: AddOptions): Promi
     ? await promptNewCompanyName(options.newCompanyName, Boolean(options.yes))
     : undefined;
 
-  const args = [
-    "company",
-    "import",
-    "--from",
-    normalizedSource,
-    "--include",
-    include.includeArg,
-    "--target",
+  const args = buildAddPaperclipArgs({
+    source: normalizedSource,
+    includeArg: include.includeArg,
     target,
-    "--agents",
-    options.agents?.trim() || "all",
-    "--collision",
-    options.collision?.trim() || "rename",
-  ];
-
-  if (companyId) {
-    args.push("--company-id", companyId);
-  }
-  if (newCompanyName) {
-    args.push("--new-company-name", newCompanyName);
-  }
-  if (options.dryRun) {
-    args.push("--dry-run");
-  }
+    agents: options.agents,
+    collision: options.collision,
+    companyId,
+    newCompanyName,
+    dryRun: options.dryRun,
+  });
 
   note(
     [
@@ -224,18 +310,18 @@ async function handleAdd(source: string | undefined, options: AddOptions): Promi
   outro("Paperclip import finished.");
 }
 
-async function handleList(options: BaseOptions): Promise<void> {
+export async function handleList(options: BaseOptions): Promise<void> {
   intro("companies");
   const provider = await pickProvider(options.provider, Boolean(options.yes));
   if (provider !== "paperclip") {
     fail("Only paperclip is supported.");
   }
 
-  await runPaperclip(["company", "list"], options);
+  await runPaperclip(buildListPaperclipArgs(), options);
   outro("Paperclip company list finished.");
 }
 
-async function handleExport(selector: string, options: ExportOptions): Promise<void> {
+export async function handleExport(selector: string, options: ExportOptions): Promise<void> {
   intro("companies");
   const provider = await pickProvider(options.provider, Boolean(options.yes));
   if (provider !== "paperclip") {
@@ -257,34 +343,16 @@ async function handleExport(selector: string, options: ExportOptions): Promise<v
   })();
 
   const companyId = await resolveCompanySelector(selector, options);
-  const args = [
-    "company",
-    "export",
+  const args = buildExportPaperclipArgs({
     companyId,
-    "--out",
     outDir,
-    "--include",
-    include.includeArg,
-  ];
-
-  const projects = normalizeTaskSelectors(options.projects);
-  if (projects.length > 0) {
-    args.push("--projects", projects.join(","));
-  }
-
-  const tasks = normalizeTaskSelectors(options.tasks);
-  if (tasks.length > 0) {
-    args.push("--issues", tasks.join(","));
-  }
-
-  const projectTasks = normalizeTaskSelectors(options.projectTasks);
-  if (projectTasks.length > 0) {
-    args.push("--project-issues", projectTasks.join(","));
-  }
-
-  if (options.expandReferencedSkills) {
-    args.push("--expand-referenced-skills");
-  }
+    includeArg: include.includeArg,
+    skills: options.skills,
+    projects: options.projects,
+    tasks: options.tasks,
+    projectTasks: options.projectTasks,
+    expandReferencedSkills: options.expandReferencedSkills,
+  });
 
   await runPaperclip(args, options);
   outro("Paperclip export finished.");
@@ -303,7 +371,7 @@ addCommonOptions(
     .alias("import")
     .description("Import an Agent Company into a provider")
     .argument("[source]", "Source path or repository")
-    .option("--include <values>", "Comma-separated include set: company,agents,projects,tasks,issues,skills", "company,agents")
+    .option("--include <values>", INCLUDE_OPTION_DESCRIPTION, "company,agents")
     .option("--target <mode>", "Import target: new | existing")
     .option("--new-company-name <name>", "Name override when creating a new company")
     .option("--agents <list>", "Comma-separated agent slugs to import, or all", "all")
@@ -331,7 +399,8 @@ addCommonOptions(
     .description("Export a provider company as a portable Agent Company package")
     .argument("<company>", "Company id, issue prefix, or exact company name")
     .option("--out <path>", "Output directory")
-    .option("--include <values>", "Comma-separated include set: company,agents,projects,tasks,issues,skills", "company,agents")
+    .option("--include <values>", INCLUDE_OPTION_DESCRIPTION, "company,agents")
+    .option("--skills <values>", "Comma-separated skill selectors to export")
     .option("--projects <values>", "Comma-separated project selectors to export")
     .option("--tasks <values>", "Comma-separated task selectors to export")
     .option("--project-tasks <values>", "Comma-separated project selectors whose tasks should be exported")
@@ -341,4 +410,9 @@ addCommonOptions(
     }),
 );
 
-program.parseAsync().catch((error) => fail(error instanceof Error ? error.message : String(error)));
+const executedPath = process.argv[1];
+const modulePath = fileURLToPath(import.meta.url);
+
+if (executedPath && modulePath === executedPath) {
+  program.parseAsync().catch((error) => fail(error instanceof Error ? error.message : String(error)));
+}
