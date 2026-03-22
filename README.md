@@ -1,8 +1,6 @@
 # companies.sh
 
-The CLI for importing and exporting Agent Companies across providers.
-
-Supports **Paperclip** today, with a provider-adapter design that can grow over time.
+The CLI for importing [Agent Companies](https://companies.io).
 
 ## Import a Company
 
@@ -62,57 +60,11 @@ npx companies.sh add paperclipai/company-template --target new -y
 | `--target <mode>` | Import into a `new` or `existing` company |
 | `-C, --company-id <id>` | Company id when using `--target existing` |
 | `--new-company-name <name>` | Override the company name when using `--target new` |
-| `--include <values>` | Comma-separated subset of `company,agents,projects,tasks,issues,skills`. Default: `company,agents` |
+| `--include <values>` | Comma-separated subset of `company,agents,projects,tasks,skills`. Default: `company,agents` |
 | `--agents <list>` | Comma-separated agent slugs to import, or `all`. Default: `all` |
 | `--collision <mode>` | How to handle name collisions: `rename`, `skip`, or `replace`. Default: `rename` |
 | `--dry-run` | Preview the import without applying it |
 | `-y, --yes` | Skip interactive prompts |
-
-> **Note:** `tasks` and `issues` are interchangeable — both map to Paperclip issues.
-
-## List Companies
-
-```bash
-npx companies.sh list
-```
-
-Lists all companies visible in the active Paperclip context. Alias: `ls`.
-
-## Export a Company
-
-Export a Paperclip company as a portable Agent Company package.
-
-```bash
-# Export by issue prefix
-npx companies.sh export PAP --out ./exports/pap
-
-# Export by company id or exact name
-npx companies.sh export <company-id> --out ./exports/my-company
-
-# Include projects and tasks in the export
-npx companies.sh export PAP --out ./exports/pap --include company,agents,projects,tasks
-
-# Export tasks for specific projects only
-npx companies.sh export PAP --out ./exports/pap --project-tasks growth-site
-
-# Export specific skills only
-npx companies.sh export PAP --out ./exports/pap --skills company-creator,frontend-design
-
-# Vendor referenced skills into the package
-npx companies.sh export PAP --out ./exports/pap --expand-referenced-skills
-```
-
-### Export Options
-
-| Option | Description |
-| --- | --- |
-| `--out <path>` | Output directory (required) |
-| `--include <values>` | Comma-separated subset of `company,agents,projects,tasks,issues,skills`. Default: `company,agents` |
-| `--skills <values>` | Export specific skills by selector |
-| `--projects <values>` | Export specific projects by selector |
-| `--tasks <values>` | Export specific tasks by selector |
-| `--project-tasks <values>` | Export tasks belonging to specific projects |
-| `--expand-referenced-skills` | Inline referenced skills into the export package |
 
 ## What Are Agent Companies?
 
@@ -126,13 +78,7 @@ Agent Companies are markdown-first packages that describe an entire AI company �
 | `TASK.md` | Pre-loaded tasks and assignments |
 | `SKILL.md` | Reusable skills available to agents |
 
-This CLI keeps the package surface generic while delegating provider-specific work to adapters. The `paperclip` adapter wraps `paperclipai company import`, `paperclipai company export`, and `paperclipai company list`.
-
-## Provider Notes
-
-- `paperclip` is the only supported provider today.
-- `tasks` in CLI terminology map to `issues` in Paperclip.
-- Skills are included in Paperclip imports/exports as part of the package.
+Paperclip is a dependency of this tool — when you install it, you use Paperclip.
 
 ## Troubleshooting
 
