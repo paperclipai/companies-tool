@@ -24,7 +24,6 @@ test("buildAddPaperclipArgs translates wrapper add options to paperclip import a
     [
       "company",
       "import",
-      "--from",
       "./fixtures/company",
       "--include",
       "company,agents,projects,issues,skills",

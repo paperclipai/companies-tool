@@ -188,7 +188,6 @@ export function buildAddPaperclipArgs(input: {
   const args = [
     "company",
     "import",
-    "--from",
     input.source,
     "--include",
     input.includeArg,
