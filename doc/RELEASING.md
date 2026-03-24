@@ -53,7 +53,7 @@ It:
 Install path:
 
 ```bash
-npx companies.sh@canary add paperclipai/company-template
+npx companies.sh@canary add paperclipai/companies/gstack
 ```
 
 ### Stable

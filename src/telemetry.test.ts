@@ -165,6 +165,55 @@ test("prepareInstallTelemetry resolves GitHub company slugs via the GitHub conte
   });
 });
 
+test("prepareInstallTelemetry resolves GitHub company slugs from owner/repo/path shorthand", async () => {
+  const configHome = fs.mkdtempSync(path.join(os.tmpdir(), "companies-telemetry-"));
+  const markdown = [
+    "---",
+    "schema: agentcompanies/v1",
+    "slug: github-company",
+    "---",
+    "",
+    "# Example",
+  ].join("\n");
+
+  await withEnv({
+    XDG_CONFIG_HOME: configHome,
+    COMPANIES_TELEMETRY: "1",
+    DISABLE_TELEMETRY: undefined,
+    DO_NOT_TRACK: undefined,
+    CI: undefined,
+  }, async () => {
+    await withMockFetch(async (input) => {
+      const url = String(input);
+      assert.match(url, /api\.github\.com\/repos\/paperclipai\/companies\/contents\/gstack\/COMPANY\.md$/);
+
+      return new Response(JSON.stringify({
+        encoding: "base64",
+        content: Buffer.from(markdown, "utf8").toString("base64"),
+      }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }, async () => {
+      const telemetry = await prepareInstallTelemetry(
+        "paperclipai/companies/gstack",
+        "existing",
+        {
+          skipPrompts: true,
+          isTTY: false,
+        },
+      );
+
+      assert.equal(telemetry.enabled, true);
+      assert.equal(telemetry.companySlug, "github-company");
+      assert.equal(telemetry.sourceKind, "github");
+      assert.equal(telemetry.target, "existing");
+    });
+  });
+});
+
 test("prepareInstallTelemetry disables telemetry in CI even when explicitly enabled", async () => {
   const configHome = fs.mkdtempSync(path.join(os.tmpdir(), "companies-telemetry-"));
 

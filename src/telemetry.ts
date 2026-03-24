@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { isGithubShorthand } from "./sources.js";
 
 const TELEMETRY_APP = "companies-sh";
 const TELEMETRY_SCHEMA_VERSION = "1";
@@ -175,6 +176,10 @@ function resolveSourceKind(source: string): SourceKind {
     return "github";
   }
 
+  if (isGithubShorthand(source)) {
+    return "github";
+  }
+
   if (/^https?:\/\//i.test(source)) {
     try {
       const url = new URL(source);
@@ -235,6 +240,15 @@ function readLocalCompanySlug(source: string): string | undefined {
 }
 
 function parseGitHubCandidates(source: string): GitHubSourceCandidate[] {
+  if (isGithubShorthand(source)) {
+    const [owner, repo, ...subpath] = source.trim().split("/").filter(Boolean);
+    return [{
+      owner: owner!,
+      repo: repo!,
+      subpath: subpath.join("/"),
+    }];
+  }
+
   const parsedSsh = source.match(/^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/i);
   if (parsedSsh) {
     return [{

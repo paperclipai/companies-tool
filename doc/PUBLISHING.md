@@ -45,7 +45,7 @@ Canaries publish automatically from `master` under the npm dist-tag `canary`.
 Example install:
 
 ```bash
-npx companies.sh@canary add paperclipai/company-template
+npx companies.sh@canary add paperclipai/companies/gstack
 ```
 
 ### Stable
@@ -55,7 +55,7 @@ Stable publishes are manual promotions through GitHub Actions and publish under 
 Example install:
 
 ```bash
-npx companies.sh add paperclipai/company-template
+npx companies.sh add paperclipai/companies/gstack
 ```
 
 ## What `scripts/release.sh` does

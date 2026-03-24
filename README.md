@@ -11,7 +11,7 @@ An installer for the [Agent Companies](https://companies.io) open standard.
 The npm package is `companies.sh`. It installs the `companies.sh` executable and keeps `companies` as a compatibility alias.
 
 ```bash
-npx companies.sh add paperclipai/company-template
+npx companies.sh add paperclipai/companies/gstack
 ```
 
 ### Common Flows
@@ -24,41 +24,41 @@ npx companies.sh add
 npx companies.sh add ./fixtures/minimal-company
 
 # Import from GitHub into a new Paperclip company
-npx companies.sh add paperclipai/company-template --target new
+npx companies.sh add paperclipai/companies/gstack --target new
 
-# Import into an existing company
-npx companies.sh add paperclipai/company-template --target existing -C <company-id>
+# Import into an existing company and pick the destination interactively
+npx companies.sh add paperclipai/companies/gstack --target existing
+
+# Import into a specific existing company without the picker
+npx companies.sh add paperclipai/companies/gstack --target existing -C <company-id>
 
 # Preview an import without applying changes
 npx companies.sh add ./my-company --target existing -C <company-id> --dry-run
 
 # Import company metadata and agents only (default)
-npx companies.sh add paperclipai/company-template --include company,agents
+npx companies.sh add paperclipai/companies/gstack --include company,agents
 
 # Import the full package
-npx companies.sh add paperclipai/company-template --include company,agents,projects,tasks,skills
+npx companies.sh add paperclipai/companies/gstack --include company,agents,projects,tasks,skills
 
 # Import specific agents only
-npx companies.sh add paperclipai/company-template --agents ceo,cto
+npx companies.sh add paperclipai/companies/gstack --agents ceo,cto
 
 # Non-interactive usage for scripts or CI
-npx companies.sh add paperclipai/company-template --target new -y
+npx companies.sh add paperclipai/companies/gstack --target new -y
 
 # Use an already-running Paperclip instance at a specific URL
-npx companies.sh add paperclipai/company-template --connection custom-url --api-base http://127.0.0.1:3100
+npx companies.sh add paperclipai/companies/gstack --connection custom-url --api-base http://127.0.0.1:3100
 ```
 
 ### Source Formats
 
 ```bash
 # GitHub shorthand
-npx companies.sh add paperclipai/company-template
+npx companies.sh add paperclipai/companies/gstack
 
-# Full GitHub URL
-npx companies.sh add https://github.com/paperclipai/company-template
-
-# Direct tree URL
-npx companies.sh add https://github.com/paperclipai/company-template/tree/main/company
+# GitHub tree URL
+npx companies.sh add https://github.com/paperclipai/companies/tree/main/gstack
 
 # Local path
 npx companies.sh add ./my-company
@@ -70,7 +70,7 @@ npx companies.sh add ./my-company
 | --------------------------- | -------------------------------------------------------------------------------------------- |
 | `-p, --provider <provider>` | Destination orchestrator. Default: `paperclip`.                                              |
 | `--target <mode>`           | Import into a `new` or `existing` Paperclip company.                                         |
-| `-C, --company-id <id>`     | Target company id when using `--target existing`.                                            |
+| `-C, --company-id <id>`     | Optional target company id for `--target existing`; omit it to choose from the Paperclip company list. |
 | `--new-company-name <name>` | Override the imported company name when using `--target new`.                                |
 | `--include <values>`        | Comma-separated subset of `company,agents,projects,tasks,skills`. Default: `company,agents`. |
 | `--agents <list>`           | Comma-separated agent slugs to import, or `all`. Default: `all`.                             |

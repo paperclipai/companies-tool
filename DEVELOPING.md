@@ -92,7 +92,7 @@ Use this to verify the wrapper can reach a local Paperclip instance without appl
 ```bash
 export PAPERCLIPAI_CMD="pnpm --dir /path/to/paperclip run paperclipai"
 
-npx companies.sh add paperclipai/company-template \
+npx companies.sh add paperclipai/companies/gstack \
   --target new \
   --dry-run \
   --yes \
