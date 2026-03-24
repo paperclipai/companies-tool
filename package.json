@@ -1,5 +1,5 @@
 {
-  "name": "companies",
+  "name": "companies.sh",
   "version": "2026.324.0-canary.0",
   "description": "A skills-style CLI for importing Agent Companies into supported providers",
   "type": "module",

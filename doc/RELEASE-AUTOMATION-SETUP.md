@@ -1,23 +1,18 @@
 # Release Automation Setup
 
-One-time control-plane setup required before the GitHub workflow can publish `companies`.
+One-time control-plane setup required before the GitHub workflow can publish `companies.sh`.
 
 ## 1. npm package ownership
 
-Confirm the `companies` package name is claimable from the intended npm org/user.
+Use `companies.sh` as the current publish target.
 
-As of 2026-03-24:
+The shorter `companies` package name is not available to us right now, so do not switch package names without a separate ownership decision.
 
-- `npm view companies` returned `E404` with an unpublished package response
-- `npm view companies.sh` returned `E404`
-
-Re-check immediately before the first publish:
+Re-check the current target package immediately before the first publish:
 
 ```bash
-npm view companies name version --json
+npm view companies.sh name version --json
 ```
-
-If `companies` becomes unavailable, revert the package name change before publishing.
 
 ## 2. Create the npm package through the first publish
 
@@ -27,7 +22,7 @@ Use the canary path first so `latest` is not pointed at an untested initial rele
 
 ## 3. Configure npm trusted publishing
 
-In npm package settings for `companies`, add a trusted publisher for:
+In npm package settings for `companies.sh`, add a trusted publisher for:
 
 - provider: GitHub Actions
 - repository: `paperclipai/companies-tool`
@@ -75,8 +70,8 @@ Keep [`.github/CODEOWNERS`](../.github/CODEOWNERS) active for:
 3. Confirm GitHub environments exist.
 4. Let the first `master` push publish a canary.
 5. Verify:
-   - `npm view companies dist-tags --json`
-   - `npm view companies@canary version`
-   - `npx companies@canary add --help`
+   - `npm view companies.sh dist-tags --json`
+   - `npm view companies.sh@canary version`
+   - `npx companies.sh@canary add --help`
 6. After validating the canary, run a manual stable dry-run.
 7. Approve and run the first stable publish.

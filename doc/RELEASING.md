@@ -1,6 +1,6 @@
-# Releasing companies
+# Releasing companies.sh
 
-Maintainer runbook for shipping `companies` to npm.
+Maintainer runbook for shipping `companies.sh` to npm.
 
 The release model is commit-driven:
 
@@ -10,7 +10,7 @@ The release model is commit-driven:
 
 ## Versioning Model
 
-`companies` uses semver-safe calendar versions:
+`companies.sh` uses semver-safe calendar versions:
 
 - stable: `YYYY.MDD.P`
 - canary: `YYYY.MDD.P-canary.N`
@@ -53,7 +53,7 @@ It:
 Install path:
 
 ```bash
-npx companies@canary add paperclipai/company-template
+npx companies.sh@canary add paperclipai/company-template
 ```
 
 ### Stable
@@ -105,21 +105,21 @@ git push origin refs/tags/vYYYY.MDD.P
 
 ## Dependency Policy
 
-`companies` currently pins `paperclipai@2026.324.0-canary.7`.
+`companies.sh` currently pins `paperclipai@2026.324.0-canary.7`.
 
 That means:
 
 - canary publishes are expected to track Paperclip canaries
-- a stable `companies` release is still allowed when it has been validated against the pinned Paperclip build
+- a stable `companies.sh` release is still allowed when it has been validated against the pinned Paperclip build
 - when Paperclip stable contains the required company import/export features, update the dependency and continue promoting stable releases normally
 
 ## Smoke Checks
 
 Minimum checks after a publish:
 
-- `npm view companies dist-tags --json`
-- `npx companies@canary add --help` after a canary publish
-- `npx companies add --help` after a stable publish
+- `npm view companies.sh dist-tags --json`
+- `npx companies.sh@canary add --help` after a canary publish
+- `npx companies.sh add --help` after a stable publish
 
 If the package behavior changed in a risky way, also run a real dry-run import against a Paperclip instance.
 

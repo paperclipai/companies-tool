@@ -1,6 +1,6 @@
 # Publishing to npm
 
-Low-level reference for how `companies` is prepared and published to npm.
+Low-level reference for how `companies.sh` is prepared and published to npm.
 
 For the maintainer workflow, use [doc/RELEASING.md](RELEASING.md). This document focuses on packaging internals and the release scripts.
 
@@ -15,7 +15,7 @@ Use these scripts:
 
 The npm package is:
 
-- package name: `companies`
+- package name: `companies.sh`
 - executable: `companies`
 - repository: `paperclipai/companies-tool`
 
@@ -23,7 +23,7 @@ The repo intentionally publishes a single package. There is no workspace version
 
 ## Version Formats
 
-`companies` follows the same semver-safe calendar versioning as Paperclip:
+`companies.sh` follows the same semver-safe calendar versioning as Paperclip:
 
 - stable: `YYYY.MDD.P`
 - canary: `YYYY.MDD.P-canary.N`
@@ -44,7 +44,7 @@ Canaries publish automatically from `master` under the npm dist-tag `canary`.
 Example install:
 
 ```bash
-npx companies@canary add paperclipai/company-template
+npx companies.sh@canary add paperclipai/company-template
 ```
 
 ### Stable
@@ -54,7 +54,7 @@ Stable publishes are manual promotions through GitHub Actions and publish under 
 Example install:
 
 ```bash
-npx companies add paperclipai/company-template
+npx companies.sh add paperclipai/company-template
 ```
 
 ## What `scripts/release.sh` does
