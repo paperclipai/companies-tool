@@ -43,6 +43,7 @@ export interface PaperclipBootstrapResult {
 
 export const DEFAULT_PAPERCLIP_API_BASE = "http://127.0.0.1:3100";
 export const MINIMUM_PAPERCLIP_VERSION = "2026.324.0-canary.0";
+export const DEFAULT_PAPERCLIP_READY_TIMEOUT_MS = 120_000;
 
 const require = createRequire(import.meta.url);
 
@@ -413,7 +414,7 @@ function launchPaperclipInBackground(
   child.unref();
 }
 
-async function waitForPaperclipApi(apiBase: string, timeoutMs = 45_000): Promise<void> {
+async function waitForPaperclipApi(apiBase: string, timeoutMs = resolvePaperclipReadyTimeoutMs()): Promise<void> {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
     if (await isPaperclipApiReachable(apiBase, 2_000)) {
@@ -539,6 +540,16 @@ function normalizeLocalHost(host: string | undefined): string {
     return "127.0.0.1";
   }
   return trimmed;
+}
+
+function resolvePaperclipReadyTimeoutMs(): number {
+  const raw = process.env.COMPANIES_PAPERCLIP_START_TIMEOUT_MS?.trim();
+  if (!raw) return DEFAULT_PAPERCLIP_READY_TIMEOUT_MS;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_PAPERCLIP_READY_TIMEOUT_MS;
+  }
+  return parsed;
 }
 
 type ParsedPaperclipVersion = {

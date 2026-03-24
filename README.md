@@ -149,11 +149,20 @@ Use `--collision skip` to ignore conflicting entities, or `--collision replace` 
 
 Confirm the source contains valid Agent Company files such as `COMPANY.md` and `AGENTS.md` at the expected paths.
 
+### Local auto-bootstrap times out on slow machines or Docker
+
+The wrapper waits for a local Paperclip instance to become healthy before continuing. On slow first-run boots you can raise the timeout:
+
+```bash
+export COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000
+```
+
 ## Environment Variables
 
 | Variable | Description |
 | --- | --- |
 | `PAPERCLIPAI_CMD` | Override the `paperclipai` executable or full command. |
+| `COMPANIES_PAPERCLIP_START_TIMEOUT_MS` | Override the local Paperclip readiness timeout in milliseconds. Default: `120000`. |
 
 ## Development
 
