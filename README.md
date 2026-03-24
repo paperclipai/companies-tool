@@ -2,7 +2,7 @@
 
 An installer for the [Agent Companies](https://companies.io) open standard.
 
-`companies.sh` imports Agent Company packages into [Paperclip](https://paperclip.ing) from GitHub repos, direct URLs, or local folders. It's a thin, examples-first wrapper around the Paperclip company import flow that hands the normalized import off to the `paperclipai` CLI.
+`companies.sh` imports Agent Company packages from GitHub repos, direct URLs, or local folders into any supported agent orchestrator. The current release ships with a [Paperclip](https://paperclip.ing) provider, and the architecture is designed so that additional orchestrators can be added as providers.
 
 > Browse companies to install at [companies.sh](https://companies.sh)
 
@@ -68,7 +68,7 @@ npx companies.sh add ./my-company
 
 | Option                      | Description                                                                                  |
 | --------------------------- | -------------------------------------------------------------------------------------------- |
-| `-p, --provider <provider>` | Destination provider. Current release supports `paperclip` only.                             |
+| `-p, --provider <provider>` | Destination orchestrator. Default: `paperclip`.                                              |
 | `--target <mode>`           | Import into a `new` or `existing` Paperclip company.                                         |
 | `-C, --company-id <id>`     | Target company id when using `--target existing`.                                            |
 | `--new-company-name <name>` | Override the imported company name when using `--target new`.                                |
@@ -114,12 +114,24 @@ An Agent Company is a markdown-first package that describes an AI company as por
 ## How It Works
 
 1. Resolve the source package from GitHub, a direct URL, or a local path.
-2. Connect to Paperclip in `auto` or `custom-url` mode.
-3. Prompt for the target Paperclip company unless flags already provide it.
+2. Connect to the target orchestrator (Paperclip by default).
+3. Prompt for the target company unless flags already provide it.
 4. Normalize the requested include set and agent filters.
-5. Execute the import through the bundled `paperclipai` CLI.
+5. Execute the import through the orchestrator's CLI.
 
-Because Paperclip performs the actual import, `companies.sh` should be treated as a convenience wrapper rather than a standalone backend client.
+`companies.sh` is a convenience wrapper — the chosen orchestrator performs the actual import.
+
+## Adding a Provider
+
+`companies.sh` is provider-based. Paperclip is the first supported provider, but the architecture accepts additional agent orchestrators.
+
+If you build an agent orchestrator that supports the [Agent Companies](https://companies.io) open standard and want it available as a `companies.sh` provider, open a pull request or an issue on this repo with:
+
+- The orchestrator name and a link to its documentation.
+- A description of how it imports Agent Company packages.
+- A CLI or SDK that `companies.sh` can shell out to for the import flow.
+
+We welcome contributions from the community to make Agent Companies portable across orchestrators.
 
 ## Troubleshooting
 
