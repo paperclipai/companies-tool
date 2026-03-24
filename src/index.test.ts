@@ -78,8 +78,8 @@ test("promptPaperclipConnection treats apiBase as custom-url", async () => {
   );
 });
 
-test("resolvePaperclipRunApiBase only forwards apiBase for custom-url mode", () => {
-  assert.equal(resolvePaperclipRunApiBase("auto", "http://127.0.0.1:3100"), undefined);
+test("resolvePaperclipRunApiBase always forwards the prepared apiBase", () => {
+  assert.equal(resolvePaperclipRunApiBase("auto", "http://127.0.0.1:3100"), "http://127.0.0.1:3100");
   assert.equal(resolvePaperclipRunApiBase("custom-url", "http://localhost:3100"), "http://localhost:3100");
 });
 

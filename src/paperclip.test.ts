@@ -16,6 +16,7 @@ import {
   resolvePaperclipCommand,
   resolveLocalPaperclipConnection,
   runPaperclip,
+  sanitizePaperclipChildEnv,
   setSpawnImplementationForTests,
 } from "./paperclip.js";
 
@@ -121,6 +122,27 @@ test("runPaperclip spawns the configured Paperclip command with translated args"
   assert.equal(command, "pnpm");
   assert.deepEqual(args, ["--dir", "/tmp/paperclip", "paperclipai", "company", "list", "--config", "./config.json", "--profile", "dev"]);
   assert.equal(options.shell, false);
+});
+
+test("sanitizePaperclipChildEnv strips injected Paperclip runtime env while keeping user config env", () => {
+  const sanitized = sanitizePaperclipChildEnv({
+    PAPERCLIP_AGENT_ID: "agent-1",
+    PAPERCLIP_API_KEY: "secret",
+    PAPERCLIP_API_URL: "http://127.0.0.1:3100",
+    PAPERCLIP_DEPLOYMENT_MODE: "authenticated",
+    PAPERCLIP_HOME: "/tmp/paperclip-home",
+    PAPERCLIP_INSTANCE_ID: "default",
+    PAPERCLIP_CONFIG: "/tmp/config.json",
+    PATH: process.env.PATH,
+  });
+
+  assert.equal(sanitized.PAPERCLIP_AGENT_ID, undefined);
+  assert.equal(sanitized.PAPERCLIP_API_KEY, undefined);
+  assert.equal(sanitized.PAPERCLIP_API_URL, undefined);
+  assert.equal(sanitized.PAPERCLIP_DEPLOYMENT_MODE, undefined);
+  assert.equal(sanitized.PAPERCLIP_HOME, "/tmp/paperclip-home");
+  assert.equal(sanitized.PAPERCLIP_INSTANCE_ID, "default");
+  assert.equal(sanitized.PAPERCLIP_CONFIG, "/tmp/config.json");
 });
 
 test("listPaperclipCompanies parses JSON output from paperclipai company list", async () => {

@@ -46,6 +46,30 @@ export const MINIMUM_PAPERCLIP_VERSION = "2026.324.0-canary.0";
 export const DEFAULT_PAPERCLIP_READY_TIMEOUT_MS = 120_000;
 
 const require = createRequire(import.meta.url);
+const STRIPPED_PAPERCLIP_CHILD_ENV_KEYS = [
+  "PAPERCLIP_AGENT_ID",
+  "PAPERCLIP_API_KEY",
+  "PAPERCLIP_API_URL",
+  "PAPERCLIP_APPROVAL_ID",
+  "PAPERCLIP_APPROVAL_STATUS",
+  "PAPERCLIP_AUTH_BASE_URL_MODE",
+  "PAPERCLIP_COMPANY_ID",
+  "PAPERCLIP_DEPLOYMENT_EXPOSURE",
+  "PAPERCLIP_DEPLOYMENT_MODE",
+  "PAPERCLIP_DEV_SERVER_STATUS_FILE",
+  "PAPERCLIP_LINKED_ISSUE_IDS",
+  "PAPERCLIP_LISTEN_HOST",
+  "PAPERCLIP_LISTEN_PORT",
+  "PAPERCLIP_RUN_ID",
+  "PAPERCLIP_TASK_ID",
+  "PAPERCLIP_UI_DEV_MIDDLEWARE",
+  "PAPERCLIP_WAKE_COMMENT_ID",
+  "PAPERCLIP_WAKE_REASON",
+  "PAPERCLIP_WORKSPACE_CWD",
+  "PAPERCLIP_WORKSPACE_ID",
+  "PAPERCLIP_WORKSPACE_REPO_URL",
+  "PAPERCLIP_WORKSPACES_JSON",
+];
 
 export function buildCommonPaperclipArgs(options: CommonPaperclipOptions): string[] {
   const args: string[] = [];
@@ -72,6 +96,16 @@ let spawnImplementation: SpawnImplementation = childProcess.spawn;
 
 export function setSpawnImplementationForTests(next: SpawnImplementation | null): void {
   spawnImplementation = next ?? childProcess.spawn;
+}
+
+export function sanitizePaperclipChildEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const sanitized = { ...env };
+
+  for (const key of STRIPPED_PAPERCLIP_CHILD_ENV_KEYS) {
+    delete sanitized[key];
+  }
+
+  return sanitized;
 }
 
 export function resolvePaperclipCommand(raw = process.env.PAPERCLIPAI_CMD?.trim()): PaperclipCommand {
@@ -107,7 +141,7 @@ export async function runPaperclip(args: string[], options: PaperclipRunOptions 
   return await new Promise<string>((resolve, reject) => {
     const child = spawnImplementation(command, fullArgs, {
       stdio: captureStdout ? ["inherit", "pipe", "inherit"] : "inherit",
-      env: process.env,
+      env: sanitizePaperclipChildEnv(process.env),
       shell: false,
     });
 
@@ -406,7 +440,7 @@ function launchPaperclipInBackground(
     detached: true,
     shell: false,
     env: {
-      ...process.env,
+      ...sanitizePaperclipChildEnv(process.env),
       PAPERCLIP_OPEN_ON_LISTEN: "false",
     },
   });

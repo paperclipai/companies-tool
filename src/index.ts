@@ -277,7 +277,7 @@ export function resolvePaperclipRunApiBase(
   mode: ConnectionMode,
   apiBase: string,
 ): string | undefined {
-  return mode === "custom-url" ? apiBase : undefined;
+  return apiBase;
 }
 
 async function preparePaperclip(options: BaseOptions): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
