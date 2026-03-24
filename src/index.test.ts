@@ -5,6 +5,7 @@ import {
   buildExportPaperclipArgs,
   buildListPaperclipArgs,
   pickProvider,
+  promptPaperclipConnection,
   promptNewCompanyName,
   promptSource,
   promptTargetMode,
@@ -20,6 +21,7 @@ test("buildAddPaperclipArgs translates wrapper add options to paperclip import a
       collision: "replace",
       companyId: "company-123",
       dryRun: true,
+      yes: true,
     }),
     [
       "company",
@@ -36,6 +38,7 @@ test("buildAddPaperclipArgs translates wrapper add options to paperclip import a
       "--company-id",
       "company-123",
       "--dry-run",
+      "--yes",
     ],
   );
 });
@@ -91,4 +94,15 @@ test("promptNewCompanyName skips the prompt in non-interactive mode", async () =
 
 test("promptSource fails fast in non-interactive mode when no source is provided", async () => {
   await assert.rejects(() => promptSource(undefined, true), /A source is required in non-interactive mode/);
+});
+
+test("promptPaperclipConnection defaults to auto in non-interactive mode", async () => {
+  assert.deepEqual(await promptPaperclipConnection({ yes: true }), { mode: "auto" });
+});
+
+test("promptPaperclipConnection treats apiBase as custom-url", async () => {
+  assert.deepEqual(
+    await promptPaperclipConnection({ apiBase: "http://localhost:3100/" }),
+    { mode: "custom-url", apiBase: "http://localhost:3100" },
+  );
 });

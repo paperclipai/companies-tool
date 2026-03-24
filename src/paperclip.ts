@@ -1,4 +1,8 @@
 import * as childProcess from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { createRequire } from "node:module";
 import pc from "picocolors";
 
 export interface CommonPaperclipOptions {
@@ -24,6 +28,23 @@ export interface PaperclipCompanyRecord {
   budgetMonthlyCents?: number | null;
   spentMonthlyCents?: number | null;
 }
+
+export interface PaperclipConnectionResolution {
+  apiBase: string;
+  configExists: boolean;
+  configPath: string;
+}
+
+export interface PaperclipBootstrapResult {
+  apiBase: string;
+  startedServer: boolean;
+  version: string;
+}
+
+export const DEFAULT_PAPERCLIP_API_BASE = "http://127.0.0.1:3100";
+export const MINIMUM_PAPERCLIP_VERSION = "2026.324.0-canary.0";
+
+const require = createRequire(import.meta.url);
 
 export function buildCommonPaperclipArgs(options: CommonPaperclipOptions): string[] {
   const args: string[] = [];
@@ -54,6 +75,14 @@ export function setSpawnImplementationForTests(next: SpawnImplementation | null)
 
 export function resolvePaperclipCommand(raw = process.env.PAPERCLIPAI_CMD?.trim()): PaperclipCommand {
   if (!raw) {
+    const bundledBin = resolveBundledPaperclipBin();
+    if (bundledBin) {
+      return {
+        command: process.execPath,
+        prefixArgs: [bundledBin],
+      };
+    }
+
     return {
       command: "paperclipai",
       prefixArgs: [],
@@ -156,6 +185,144 @@ export function printWarnings(warnings: string[]): void {
   }
 }
 
+export function normalizeApiBase(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    throw new Error("Paperclip API base URL must not be empty.");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error(`Invalid Paperclip API base URL '${input}'.`);
+  }
+
+  if (!/^https?:$/.test(parsed.protocol)) {
+    throw new Error(`Unsupported Paperclip API base URL '${input}'. Use http:// or https://.`);
+  }
+
+  parsed.pathname = parsed.pathname.replace(/\/+$/, "");
+  parsed.search = "";
+  parsed.hash = "";
+  return parsed.toString().replace(/\/+$/, "");
+}
+
+export function comparePaperclipVersions(left: string, right: string): number {
+  const leftParsed = parsePaperclipVersion(left);
+  const rightParsed = parsePaperclipVersion(right);
+
+  if (leftParsed && rightParsed) {
+    return compareParsedVersion(leftParsed, rightParsed);
+  }
+
+  if (left === right) return 0;
+  return left.localeCompare(right);
+}
+
+export function isPaperclipVersionSupported(version: string): boolean {
+  return comparePaperclipVersions(version, MINIMUM_PAPERCLIP_VERSION) >= 0;
+}
+
+export async function getPaperclipVersion(): Promise<string> {
+  const output = await runPaperclip(["--version"], { captureStdout: true });
+  return output.trim();
+}
+
+export function resolveLocalPaperclipConnection(
+  options: Pick<CommonPaperclipOptions, "config" | "dataDir">,
+  cwd = process.cwd(),
+  env: NodeJS.ProcessEnv = process.env,
+): PaperclipConnectionResolution {
+  const configPath = resolveLocalPaperclipConfigPath(options, cwd, env);
+  const configExists = fs.existsSync(configPath);
+  return {
+    apiBase: configExists ? readApiBaseFromConfig(configPath) : resolveDefaultLocalApiBase(env),
+    configExists,
+    configPath,
+  };
+}
+
+export async function isPaperclipApiReachable(apiBase: string, timeoutMs = 1_500): Promise<boolean> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(`${normalizeApiBase(apiBase)}/api/health`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+    return response.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function ensurePaperclipVersion(): Promise<string> {
+  const version = await getPaperclipVersion();
+  if (!isPaperclipVersionSupported(version)) {
+    throw new Error(
+      `companies.sh requires paperclipai ${MINIMUM_PAPERCLIP_VERSION} or newer. Found ${version}. ` +
+      "Install a newer paperclipai canary or point PAPERCLIPAI_CMD at a newer build.",
+    );
+  }
+  return version;
+}
+
+export async function ensureLocalPaperclipReady(
+  options: Pick<CommonPaperclipOptions, "config" | "dataDir">,
+): Promise<PaperclipBootstrapResult> {
+  const version = await ensurePaperclipVersion();
+
+  let connection = resolveLocalPaperclipConnection(options);
+  if (await isPaperclipApiReachable(connection.apiBase)) {
+    return {
+      apiBase: connection.apiBase,
+      startedServer: false,
+      version,
+    };
+  }
+
+  if (!connection.configExists) {
+    launchPaperclipInBackground(["onboard", "--yes"], pickSetupOptions(options));
+    await waitForPaperclipApi(connection.apiBase);
+    return {
+      apiBase: connection.apiBase,
+      startedServer: true,
+      version,
+    };
+  }
+
+  launchPaperclipInBackground(["run"], pickSetupOptions(options));
+  await waitForPaperclipApi(connection.apiBase);
+
+  return {
+    apiBase: connection.apiBase,
+    startedServer: true,
+    version,
+  };
+}
+
+export async function assertPaperclipApiReady(
+  apiBase: string,
+): Promise<PaperclipBootstrapResult> {
+  const version = await ensurePaperclipVersion();
+  const normalizedApiBase = normalizeApiBase(apiBase);
+  if (!await isPaperclipApiReachable(normalizedApiBase, 3_000)) {
+    throw new Error(
+      `Could not reach Paperclip at ${normalizedApiBase}. Start Paperclip there or use auto connection mode.`,
+    );
+  }
+
+  return {
+    apiBase: normalizedApiBase,
+    startedServer: false,
+    version,
+  };
+}
+
 function appendFlag(args: string[], flag: string, value: string | undefined): void {
   if (!value?.trim()) return;
   args.push(flag, value.trim());
@@ -217,4 +384,215 @@ function splitCommandString(input: string): string[] {
   }
 
   return tokens;
+}
+
+function pickSetupOptions(
+  options: Pick<CommonPaperclipOptions, "config" | "dataDir">,
+): CommonPaperclipOptions {
+  return {
+    ...(options.config?.trim() ? { config: options.config.trim() } : {}),
+    ...(options.dataDir?.trim() ? { dataDir: options.dataDir.trim() } : {}),
+  };
+}
+
+function launchPaperclipInBackground(
+  commandArgs: string[],
+  options: Pick<CommonPaperclipOptions, "config" | "dataDir">,
+): void {
+  const { command, prefixArgs } = resolvePaperclipCommand();
+  const child = spawnImplementation(command, [...prefixArgs, ...commandArgs, ...buildCommonPaperclipArgs(options)], {
+    stdio: "ignore",
+    detached: true,
+    shell: false,
+    env: {
+      ...process.env,
+      PAPERCLIP_OPEN_ON_LISTEN: "false",
+    },
+  });
+
+  child.unref();
+}
+
+async function waitForPaperclipApi(apiBase: string, timeoutMs = 45_000): Promise<void> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    if (await isPaperclipApiReachable(apiBase, 2_000)) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  throw new Error(
+    `Paperclip did not become ready at ${apiBase} within ${Math.round(timeoutMs / 1000)} seconds.`,
+  );
+}
+
+function resolveBundledPaperclipBin(): string | null {
+  try {
+    const packageJsonPath = require.resolve("paperclipai/package.json");
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
+      bin?: string | Record<string, string>;
+    };
+    const rawBin = typeof packageJson.bin === "string"
+      ? packageJson.bin
+      : packageJson.bin?.paperclipai ?? Object.values(packageJson.bin ?? {})[0];
+
+    if (!rawBin) {
+      return null;
+    }
+
+    return path.resolve(path.dirname(packageJsonPath), rawBin);
+  } catch {
+    return null;
+  }
+}
+
+function resolveLocalPaperclipConfigPath(
+  options: Pick<CommonPaperclipOptions, "config" | "dataDir">,
+  cwd: string,
+  env: NodeJS.ProcessEnv,
+): string {
+  if (options.config?.trim()) {
+    return path.resolve(options.config.trim());
+  }
+
+  if (env.PAPERCLIP_CONFIG?.trim()) {
+    return path.resolve(env.PAPERCLIP_CONFIG.trim());
+  }
+
+  const ancestorConfig = findConfigFileFromAncestors(cwd);
+  if (ancestorConfig) {
+    return ancestorConfig;
+  }
+
+  const homeDir = options.dataDir?.trim()
+    ? path.resolve(options.dataDir.trim())
+    : env.PAPERCLIP_HOME?.trim()
+      ? path.resolve(env.PAPERCLIP_HOME.trim())
+      : path.resolve(os.homedir(), ".paperclip");
+  const instanceId = env.PAPERCLIP_INSTANCE_ID?.trim() || "default";
+  return path.resolve(homeDir, "instances", instanceId, "config.json");
+}
+
+function findConfigFileFromAncestors(startDir: string): string | null {
+  let currentDir = path.resolve(startDir);
+  while (true) {
+    const candidate = path.resolve(currentDir, ".paperclip", "config.json");
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+
+    const nextDir = path.resolve(currentDir, "..");
+    if (nextDir === currentDir) {
+      return null;
+    }
+    currentDir = nextDir;
+  }
+}
+
+function readApiBaseFromConfig(configPath: string): string {
+  try {
+    const raw = JSON.parse(fs.readFileSync(configPath, "utf8")) as {
+      auth?: { publicBaseUrl?: string };
+      server?: { host?: string; port?: number };
+    };
+    const publicBaseUrl = raw.auth?.publicBaseUrl?.trim();
+    if (publicBaseUrl) {
+      return normalizeApiBase(publicBaseUrl);
+    }
+
+    const port = Number(raw.server?.port);
+    const safePort = Number.isFinite(port) && port > 0 ? port : 3100;
+    const host = normalizeLocalHost(raw.server?.host);
+    return normalizeApiBase(`http://${host}:${safePort}`);
+  } catch {
+    return DEFAULT_PAPERCLIP_API_BASE;
+  }
+}
+
+function resolveDefaultLocalApiBase(env: NodeJS.ProcessEnv): string {
+  const publicBaseUrl =
+    env.PAPERCLIP_PUBLIC_URL?.trim()
+    || env.PAPERCLIP_AUTH_PUBLIC_BASE_URL?.trim()
+    || env.BETTER_AUTH_URL?.trim()
+    || env.BETTER_AUTH_BASE_URL?.trim();
+  if (publicBaseUrl) {
+    try {
+      return normalizeApiBase(publicBaseUrl);
+    } catch {
+      // Fall through to HOST/PORT defaults.
+    }
+  }
+
+  const host = normalizeLocalHost(env.HOST);
+  const port = Number(env.PORT);
+  const safePort = Number.isFinite(port) && port > 0 ? port : 3100;
+  return normalizeApiBase(`http://${host}:${safePort}`);
+}
+
+function normalizeLocalHost(host: string | undefined): string {
+  const trimmed = host?.trim();
+  if (!trimmed || trimmed === "0.0.0.0" || trimmed === "::") {
+    return "127.0.0.1";
+  }
+  if (trimmed === "localhost") {
+    return "127.0.0.1";
+  }
+  return trimmed;
+}
+
+type ParsedPaperclipVersion = {
+  main: number[];
+  prerelease: Array<number | string>;
+};
+
+function parsePaperclipVersion(input: string): ParsedPaperclipVersion | null {
+  const match = input.trim().match(/^(\d+(?:\.\d+)*)(?:-([0-9A-Za-z.-]+))?$/);
+  if (!match) return null;
+
+  return {
+    main: match[1].split(".").map((part) => Number(part)),
+    prerelease: match[2]
+      ? match[2].split(".").map((part) => (/^\d+$/.test(part) ? Number(part) : part))
+      : [],
+  };
+}
+
+function compareParsedVersion(left: ParsedPaperclipVersion, right: ParsedPaperclipVersion): number {
+  const maxMainLength = Math.max(left.main.length, right.main.length);
+  for (let index = 0; index < maxMainLength; index += 1) {
+    const leftPart = left.main[index] ?? 0;
+    const rightPart = right.main[index] ?? 0;
+    if (leftPart !== rightPart) {
+      return leftPart > rightPart ? 1 : -1;
+    }
+  }
+
+  if (left.prerelease.length === 0 && right.prerelease.length === 0) {
+    return 0;
+  }
+  if (left.prerelease.length === 0) {
+    return 1;
+  }
+  if (right.prerelease.length === 0) {
+    return -1;
+  }
+
+  const maxPreLength = Math.max(left.prerelease.length, right.prerelease.length);
+  for (let index = 0; index < maxPreLength; index += 1) {
+    const leftPart = left.prerelease[index];
+    const rightPart = right.prerelease[index];
+    if (leftPart === undefined) return -1;
+    if (rightPart === undefined) return 1;
+    if (leftPart === rightPart) continue;
+
+    if (typeof leftPart === "number" && typeof rightPart === "number") {
+      return leftPart > rightPart ? 1 : -1;
+    }
+    if (typeof leftPart === "number") return -1;
+    if (typeof rightPart === "number") return 1;
+    return leftPart.localeCompare(rightPart);
+  }
+
+  return 0;
 }

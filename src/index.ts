@@ -5,11 +5,16 @@ import { Command } from "commander";
 import pc from "picocolors";
 import { fileURLToPath } from "node:url";
 import {
+  assertPaperclipApiReady,
+  DEFAULT_PAPERCLIP_API_BASE,
+  ensureLocalPaperclipReady,
   listPaperclipCompanies,
+  normalizeApiBase,
   printWarnings,
   resolveCompanySelector,
   runPaperclip,
   type CommonPaperclipOptions,
+  type PaperclipBootstrapResult,
   type PaperclipCompanyRecord,
 } from "./paperclip.js";
 import {
@@ -22,8 +27,10 @@ import { normalizeSourceInput } from "./sources.js";
 
 type TargetMode = "new" | "existing";
 type CollisionMode = "rename" | "skip" | "replace";
+type ConnectionMode = "auto" | "custom-url";
 
 interface BaseOptions extends CommonPaperclipOptions {
+  connection?: ConnectionMode;
   provider?: string;
   yes?: boolean;
 }
@@ -132,6 +139,78 @@ export async function promptSource(current: string | undefined, skipPrompts: boo
   return normalizeSourceInput(coerceCancel(result));
 }
 
+function resolveConnectionMode(input: string | undefined): ConnectionMode | undefined {
+  if (!input?.trim()) return undefined;
+  const normalized = input.trim().toLowerCase();
+  if (normalized === "auto" || normalized === "custom-url") {
+    return normalized;
+  }
+  throw new Error(`Invalid --connection value '${input}'. Use auto or custom-url.`);
+}
+
+export async function promptPaperclipConnection(
+  options: BaseOptions,
+): Promise<{ mode: ConnectionMode; apiBase?: string }> {
+  if (options.apiBase?.trim()) {
+    return {
+      mode: "custom-url",
+      apiBase: normalizeApiBase(options.apiBase),
+    };
+  }
+
+  const explicitMode = resolveConnectionMode(options.connection);
+  if (explicitMode === "custom-url") {
+    if (options.yes) {
+      throw new Error("--api-base is required when --connection custom-url is used in non-interactive mode.");
+    }
+
+    const entered = await text({
+      message: "Paperclip URL",
+      placeholder: DEFAULT_PAPERCLIP_API_BASE,
+      defaultValue: DEFAULT_PAPERCLIP_API_BASE,
+    });
+    return {
+      mode: "custom-url",
+      apiBase: normalizeApiBase(coerceCancel(entered)),
+    };
+  }
+
+  if (explicitMode === "auto" || options.yes) {
+    return { mode: "auto" };
+  }
+
+  const selected = await select({
+    message: "How should companies.sh connect to Paperclip?",
+    options: [
+      {
+        value: "auto",
+        label: "auto",
+        hint: "Use the local Paperclip install, onboard if needed, and start it if it is not running",
+      },
+      {
+        value: "custom-url",
+        label: "custom-url",
+        hint: "Use a specific Paperclip base URL",
+      },
+    ],
+    initialValue: "auto",
+  });
+  const mode = coerceCancel(selected) as ConnectionMode;
+  if (mode === "auto") {
+    return { mode };
+  }
+
+  const entered = await text({
+    message: "Paperclip URL",
+    placeholder: DEFAULT_PAPERCLIP_API_BASE,
+    defaultValue: DEFAULT_PAPERCLIP_API_BASE,
+  });
+  return {
+    mode,
+    apiBase: normalizeApiBase(coerceCancel(entered)),
+  };
+}
+
 async function promptExistingCompanyId(options: BaseOptions): Promise<string> {
   const companies = await listPaperclipCompanies(options).catch(() => []);
   if (options.yes || companies.length === 0) {
@@ -175,6 +254,23 @@ export async function promptNewCompanyName(
   return coerceCancel(result).trim() || undefined;
 }
 
+async function preparePaperclip(options: BaseOptions): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
+  const connection = await promptPaperclipConnection(options);
+  if (connection.mode === "auto") {
+    const ready = await ensureLocalPaperclipReady(options);
+    return {
+      ...ready,
+      mode: "auto",
+    };
+  }
+
+  const ready = await assertPaperclipApiReady(connection.apiBase ?? DEFAULT_PAPERCLIP_API_BASE);
+  return {
+    ...ready,
+    mode: "custom-url",
+  };
+}
+
 export function buildAddPaperclipArgs(input: {
   source: string;
   includeArg: string;
@@ -184,6 +280,7 @@ export function buildAddPaperclipArgs(input: {
   companyId?: string;
   newCompanyName?: string;
   dryRun?: boolean;
+  yes?: boolean;
 }): string[] {
   const args = [
     "company",
@@ -207,6 +304,9 @@ export function buildAddPaperclipArgs(input: {
   }
   if (input.dryRun) {
     args.push("--dry-run");
+  }
+  if (input.yes) {
+    args.push("--yes");
   }
 
   return args;
@@ -271,6 +371,12 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
     fail("Only paperclip is supported.");
   }
 
+  const prepared = await preparePaperclip(options);
+  const paperclipOptions: AddOptions = {
+    ...options,
+    apiBase: prepared.apiBase,
+  };
+
   const include = normalizeIncludeValues(options.include);
   printWarnings(include.warnings);
 
@@ -278,7 +384,7 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
   const target = await promptTargetMode(options.target, Boolean(options.yes));
 
   const companyId = target === "existing"
-    ? (options.companyId?.trim() || await promptExistingCompanyId(options))
+    ? (options.companyId?.trim() || await promptExistingCompanyId(paperclipOptions))
     : undefined;
   const newCompanyName = target === "new"
     ? await promptNewCompanyName(options.newCompanyName, Boolean(options.yes))
@@ -293,11 +399,14 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
     companyId,
     newCompanyName,
     dryRun: options.dryRun,
+    yes: options.yes,
   });
 
   note(
     [
       `provider: ${provider}`,
+      `paperclip: ${prepared.apiBase} (${prepared.mode}${prepared.startedServer ? ", started locally" : ""})`,
+      `paperclipai: ${prepared.version}`,
       `source: ${normalizedSource}`,
       `target: ${target}${companyId ? ` (${companyId})` : ""}`,
       `include: ${include.includeArg}`,
@@ -305,7 +414,7 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
     "Running",
   );
 
-  await runPaperclip(args, options);
+  await runPaperclip(args, paperclipOptions);
   outro("Paperclip import finished.");
 }
 
@@ -316,7 +425,11 @@ export async function handleList(options: BaseOptions): Promise<void> {
     fail("Only paperclip is supported.");
   }
 
-  await runPaperclip(buildListPaperclipArgs(), options);
+  const prepared = await preparePaperclip(options);
+  await runPaperclip(buildListPaperclipArgs(), {
+    ...options,
+    apiBase: prepared.apiBase,
+  });
   outro("Paperclip company list finished.");
 }
 
@@ -326,6 +439,12 @@ export async function handleExport(selector: string, options: ExportOptions): Pr
   if (provider !== "paperclip") {
     fail("Only paperclip is supported.");
   }
+
+  const prepared = await preparePaperclip(options);
+  const paperclipOptions: ExportOptions = {
+    ...options,
+    apiBase: prepared.apiBase,
+  };
 
   const include = normalizeIncludeValues(options.include);
   printWarnings(include.warnings);
@@ -341,7 +460,7 @@ export async function handleExport(selector: string, options: ExportOptions): Pr
     return coerceCancel(result).trim();
   })();
 
-  const companyId = await resolveCompanySelector(selector, options);
+  const companyId = await resolveCompanySelector(selector, paperclipOptions);
   const args = buildExportPaperclipArgs({
     companyId,
     outDir,
@@ -353,7 +472,7 @@ export async function handleExport(selector: string, options: ExportOptions): Pr
     expandReferencedSkills: options.expandReferencedSkills,
   });
 
-  await runPaperclip(args, options);
+  await runPaperclip(args, paperclipOptions);
   outro("Paperclip export finished.");
 }
 
@@ -370,6 +489,7 @@ addCommonOptions(
     .alias("import")
     .description("Import an Agent Company into a provider")
     .argument("[source]", "Source path or repository")
+    .option("--connection <mode>", "Paperclip connection mode: auto | custom-url")
     .option("--include <values>", INCLUDE_OPTION_DESCRIPTION, "company,agents")
     .option("--target <mode>", "Import target: new | existing")
     .option("--new-company-name <name>", "Name override when creating a new company")
@@ -387,6 +507,7 @@ addCommonOptions(
     .command("list")
     .alias("ls")
     .description("List companies visible through the provider")
+    .option("--connection <mode>", "Paperclip connection mode: auto | custom-url")
     .action((options: BaseOptions) => {
       handleList(options).catch((error) => fail(error instanceof Error ? error.message : String(error)));
     }),
@@ -397,6 +518,7 @@ addCommonOptions(
     .command("export")
     .description("Export a provider company as a portable Agent Company package")
     .argument("<company>", "Company id, issue prefix, or exact company name")
+    .option("--connection <mode>", "Paperclip connection mode: auto | custom-url")
     .option("--out <path>", "Output directory")
     .option("--include <values>", INCLUDE_OPTION_DESCRIPTION, "company,agents")
     .option("--skills <values>", "Comma-separated skill selectors to export")

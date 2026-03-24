@@ -1,13 +1,20 @@
 import assert from "node:assert/strict";
 import * as childProcess from "node:child_process";
 import { EventEmitter } from "node:events";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { PassThrough } from "node:stream";
 import test from "node:test";
 import {
   buildCommonPaperclipArgs,
+  comparePaperclipVersions,
+  DEFAULT_PAPERCLIP_API_BASE,
+  isPaperclipVersionSupported,
   listPaperclipCompanies,
   resolveCompanySelector,
   resolvePaperclipCommand,
+  resolveLocalPaperclipConnection,
   runPaperclip,
   setSpawnImplementationForTests,
 } from "./paperclip.js";
@@ -142,5 +149,71 @@ test("resolveCompanySelector matches company issue prefix via company list looku
     assert.equal(resolved, "company-2");
   } finally {
     spawnMock.restore();
+  }
+});
+
+test("comparePaperclipVersions handles canary prereleases", () => {
+  assert.equal(comparePaperclipVersions("2026.324.0-canary.2", "2026.324.0-canary.0") > 0, true);
+  assert.equal(comparePaperclipVersions("2026.324.0", "2026.324.0-canary.9") > 0, true);
+  assert.equal(comparePaperclipVersions("2026.318.0", "2026.324.0-canary.0") < 0, true);
+});
+
+test("isPaperclipVersionSupported enforces the minimum canary gate", () => {
+  assert.equal(isPaperclipVersionSupported("2026.324.0-canary.0"), true);
+  assert.equal(isPaperclipVersionSupported("2026.324.0-canary.2"), true);
+  assert.equal(isPaperclipVersionSupported("2026.318.0"), false);
+});
+
+test("resolveLocalPaperclipConnection uses a discovered project config when present", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "companies-paperclip-config-"));
+  const projectDir = path.join(tempRoot, "workspace", "nested");
+  const configDir = path.join(tempRoot, "workspace", ".paperclip");
+  fs.mkdirSync(projectDir, { recursive: true });
+  fs.mkdirSync(configDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(configDir, "config.json"),
+    JSON.stringify({
+      server: {
+        host: "0.0.0.0",
+        port: 4100,
+      },
+    }),
+    "utf8",
+  );
+
+  try {
+    const resolved = resolveLocalPaperclipConnection({}, projectDir, {});
+    assert.equal(resolved.configExists, true);
+    assert.equal(resolved.apiBase, "http://127.0.0.1:4100");
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test("resolveLocalPaperclipConnection falls back to the default local base when config is missing", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "companies-paperclip-default-"));
+
+  try {
+    const resolved = resolveLocalPaperclipConnection({ dataDir: path.join(tempRoot, "pc-home") }, tempRoot, {});
+    assert.equal(resolved.configExists, false);
+    assert.equal(resolved.apiBase, DEFAULT_PAPERCLIP_API_BASE);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test("resolveLocalPaperclipConnection respects HOST and PORT env overrides before onboarding", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "companies-paperclip-env-"));
+
+  try {
+    const resolved = resolveLocalPaperclipConnection(
+      { dataDir: path.join(tempRoot, "pc-home") },
+      tempRoot,
+      { HOST: "0.0.0.0", PORT: "3210" },
+    );
+    assert.equal(resolved.configExists, false);
+    assert.equal(resolved.apiBase, "http://127.0.0.1:3210");
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 });
