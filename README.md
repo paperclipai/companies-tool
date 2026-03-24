@@ -1,14 +1,8 @@
-# companies.sh
+# [companies.sh](https://companies.sh)
 
-The CLI for importing [Agent Companies](https://companies.io) into **Paperclip**.
+An installer for the [Agent Companies](https://companies.io) open standard.
 
-`companies.sh` is a thin, examples-first wrapper around the Paperclip company import flow. It accepts GitHub repos, direct URLs, and local folders, then hands the normalized import off to the `paperclipai` CLI.
-
-## Before You Start
-
-- Install Node.js 20 or newer
-- Have network access for the first install so `companies.sh` can install its bundled `paperclipai` dependency
-- If you are targeting an existing authenticated Paperclip instance, provide board auth through your normal Paperclip context or explicit `--api-key`
+`companies.sh` imports Agent Company packages into [Paperclip](https://paperclip.ing) from GitHub repos, direct URLs, or local folders. It's a thin, examples-first wrapper around the Paperclip company import flow that hands the normalized import off to the `paperclipai` CLI.
 
 ## Import a Company
 
@@ -70,31 +64,31 @@ npx companies.sh add ./my-company
 
 ### Options
 
-| Option | Description |
-| --- | --- |
-| `-p, --provider <provider>` | Destination provider. Current release supports `paperclip` only. |
-| `--target <mode>` | Import into a `new` or `existing` Paperclip company. |
-| `-C, --company-id <id>` | Target company id when using `--target existing`. |
-| `--new-company-name <name>` | Override the imported company name when using `--target new`. |
-| `--include <values>` | Comma-separated subset of `company,agents,projects,tasks,skills`. Default: `company,agents`. |
-| `--agents <list>` | Comma-separated agent slugs to import, or `all`. Default: `all`. |
-| `--collision <mode>` | Collision strategy: `rename`, `skip`, or `replace`. Default: `rename`. |
-| `--dry-run` | Preview the import without applying it. |
-| `-y, --yes` | Skip interactive prompts. |
-| `--connection <mode>` | Paperclip connection mode: `auto` or `custom-url`. Default: `auto`. |
+| Option                      | Description                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------- |
+| `-p, --provider <provider>` | Destination provider. Current release supports `paperclip` only.                             |
+| `--target <mode>`           | Import into a `new` or `existing` Paperclip company.                                         |
+| `-C, --company-id <id>`     | Target company id when using `--target existing`.                                            |
+| `--new-company-name <name>` | Override the imported company name when using `--target new`.                                |
+| `--include <values>`        | Comma-separated subset of `company,agents,projects,tasks,skills`. Default: `company,agents`. |
+| `--agents <list>`           | Comma-separated agent slugs to import, or `all`. Default: `all`.                             |
+| `--collision <mode>`        | Collision strategy: `rename`, `skip`, or `replace`. Default: `rename`.                       |
+| `--dry-run`                 | Preview the import without applying it.                                                      |
+| `-y, --yes`                 | Skip interactive prompts.                                                                    |
+| `--connection <mode>`       | Paperclip connection mode: `auto` or `custom-url`. Default: `auto`.                          |
 
 ### Paperclip Connection Flags
 
 Use these when the Paperclip CLI needs explicit connection or profile settings:
 
-| Flag | Description |
-| --- | --- |
-| `-c, --config <path>` | Path to a Paperclip config file. |
-| `-d, --data-dir <path>` | Paperclip data directory root. |
-| `--context <path>` | Path to a Paperclip CLI context file. |
-| `--profile <name>` | Paperclip CLI context profile name. |
-| `--api-base <url>` | Paperclip API base URL override. |
-| `--api-key <token>` | Paperclip API key override. |
+| Flag                    | Description                           |
+| ----------------------- | ------------------------------------- |
+| `-c, --config <path>`   | Path to a Paperclip config file.      |
+| `-d, --data-dir <path>` | Paperclip data directory root.        |
+| `--context <path>`      | Path to a Paperclip CLI context file. |
+| `--profile <name>`      | Paperclip CLI context profile name.   |
+| `--api-base <url>`      | Paperclip API base URL override.      |
+| `--api-key <token>`     | Paperclip API key override.           |
 
 ### Connection Modes
 
@@ -107,13 +101,13 @@ Use these when the Paperclip CLI needs explicit connection or profile settings:
 
 An Agent Company is a markdown-first package that describes an AI company as portable files:
 
-| File | Purpose |
-| --- | --- |
-| `COMPANY.md` | Company metadata and configuration |
-| `AGENTS.md` | Agent definitions, roles, and reporting structure |
-| `PROJECT.md` | Project definitions and workspace bindings |
-| `TASK.md` | Pre-loaded tasks and assignments |
-| `SKILL.md` | Reusable skills available to agents |
+| File         | Purpose                                           |
+| ------------ | ------------------------------------------------- |
+| `COMPANY.md` | Company metadata and configuration                |
+| `AGENTS.md`  | Agent definitions, roles, and reporting structure |
+| `PROJECT.md` | Project definitions and workspace bindings        |
+| `TASK.md`    | Pre-loaded tasks and assignments                  |
+| `SKILL.md`   | Reusable skills available to agents               |
 
 ## How It Works
 
@@ -161,9 +155,9 @@ export COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000
 
 ## Environment Variables
 
-| Variable | Description |
-| --- | --- |
-| `PAPERCLIPAI_CMD` | Override the `paperclipai` executable or full command. |
+| Variable                               | Description                                                                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------- |
+| `PAPERCLIPAI_CMD`                      | Override the `paperclipai` executable or full command.                             |
 | `COMPANIES_PAPERCLIP_START_TIMEOUT_MS` | Override the local Paperclip readiness timeout in milliseconds. Default: `120000`. |
 
 ## Maintainers
