@@ -265,7 +265,7 @@ export async function ensurePaperclipVersion(): Promise<string> {
   const version = await getPaperclipVersion();
   if (!isPaperclipVersionSupported(version)) {
     throw new Error(
-      `companies.sh requires paperclipai ${MINIMUM_PAPERCLIP_VERSION} or newer. Found ${version}. ` +
+      `companies requires paperclipai ${MINIMUM_PAPERCLIP_VERSION} or newer. Found ${version}. ` +
       "Install a newer paperclipai canary or point PAPERCLIPAI_CMD at a newer build.",
     );
   }

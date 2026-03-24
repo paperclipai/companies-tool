@@ -1,0 +1,233 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Commit SHA, branch, or tag to publish as stable
+        required: true
+        type: string
+        default: master
+      stable_date:
+        description: Optional UTC date override in YYYY-MM-DD. Enter a date like 2026-03-24, not a version string.
+        required: false
+        type: string
+      dry_run:
+        description: Preview the stable release without publishing
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify_canary:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  publish_canary:
+    if: github.event_name == 'push'
+    needs: verify_canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-canary
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish canary
+        env:
+          GITHUB_ACTIONS: "true"
+        run: ./scripts/release.sh canary --skip-verify
+
+      - name: Push canary tag
+        run: |
+          tag="$(git tag --points-at HEAD | grep '^canary/v' | head -1)"
+          if [ -z "$tag" ]; then
+            echo "Error: no canary tag points at HEAD after release." >&2
+            exit 1
+          fi
+          git push origin "refs/tags/${tag}"
+
+  verify_stable:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  preview_stable:
+    if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+    needs: verify_stable
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dry-run stable release
+        env:
+          GITHUB_ACTIONS: "true"
+        run: |
+          args=(stable --skip-verify --dry-run)
+          if [ -n "${{ inputs.stable_date }}" ]; then
+            args+=(--date "${{ inputs.stable_date }}")
+          fi
+          ./scripts/release.sh "${args[@]}"
+
+  publish_stable:
+    if: github.event_name == 'workflow_dispatch' && !inputs.dry_run
+    needs: verify_stable
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-stable
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.4.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish stable
+        env:
+          GITHUB_ACTIONS: "true"
+        run: |
+          args=(stable --skip-verify)
+          if [ -n "${{ inputs.stable_date }}" ]; then
+            args+=(--date "${{ inputs.stable_date }}")
+          fi
+          ./scripts/release.sh "${args[@]}"
+
+      - name: Push stable tag
+        run: |
+          tag="$(git tag --points-at HEAD | grep '^v' | head -1)"
+          if [ -z "$tag" ]; then
+            echo "Error: no stable tag points at HEAD after release." >&2
+            exit 1
+          fi
+          git push origin "refs/tags/${tag}"

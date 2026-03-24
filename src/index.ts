@@ -3,6 +3,8 @@
 import { intro, outro, select, text, confirm, isCancel, cancel, note } from "@clack/prompts";
 import { Command } from "commander";
 import pc from "picocolors";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   assertPaperclipApiReady,
@@ -55,6 +57,17 @@ interface ExportOptions extends BaseOptions {
 }
 
 const INCLUDE_OPTION_DESCRIPTION = `Comma-separated include set: ${INCLUDE_OPTION_HELP_TEXT}`;
+const packageVersion = readPackageVersion();
+
+function readPackageVersion(): string {
+  try {
+    const packageJsonPath = resolve(dirname(fileURLToPath(import.meta.url)), "..", "package.json");
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as { version?: unknown };
+    return typeof packageJson.version === "string" ? packageJson.version : "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
 
 function addCommonOptions(command: Command, opts?: { includeCompanyId?: boolean }): Command {
   const configured = command
@@ -180,7 +193,7 @@ export async function promptPaperclipConnection(
   }
 
   const selected = await select({
-    message: "How should companies.sh connect to Paperclip?",
+    message: "How should companies connect to Paperclip?",
     options: [
       {
         value: "auto",
@@ -481,7 +494,7 @@ const program = new Command();
 program
   .name("companies")
   .description("A skills-style CLI for importing Agent Companies into supported providers")
-  .version("0.1.0");
+  .version(packageVersion);
 
 addCommonOptions(
   program

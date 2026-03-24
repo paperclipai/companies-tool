@@ -1,6 +1,6 @@
 {
-  "name": "companies.sh",
-  "version": "0.1.0",
+  "name": "companies",
+  "version": "2026.324.0-canary.0",
   "description": "A skills-style CLI for importing Agent Companies into supported providers",
   "type": "module",
   "bin": {
@@ -20,18 +20,30 @@
   },
   "keywords": [
     "agent-companies",
+    "companies",
     "paperclip",
     "cli"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paperclipai/companies-tool.git"
+  },
+  "homepage": "https://github.com/paperclipai/companies-tool#readme",
+  "bugs": {
+    "url": "https://github.com/paperclipai/companies-tool/issues"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=20"
   },
   "packageManager": "pnpm@9.4.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@clack/prompts": "^0.10.1",
     "commander": "^13.1.0",
-    "paperclipai": "2026.324.0-canary.2",
+    "paperclipai": "2026.324.0-canary.7",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {

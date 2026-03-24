@@ -1,69 +1,69 @@
-# companies.sh
+# companies
 
 The CLI for importing [Agent Companies](https://companies.io) into **Paperclip**.
 
-`companies.sh` is a thin, examples-first wrapper around the Paperclip company import flow. It accepts GitHub repos, direct URLs, and local folders, then hands the normalized import off to the `paperclipai` CLI.
+`companies` is a thin, examples-first wrapper around the Paperclip company import flow. It accepts GitHub repos, direct URLs, and local folders, then hands the normalized import off to the `paperclipai` CLI.
 
 ## Before You Start
 
 - Install Node.js 20 or newer
-- Have network access for the first install so `companies.sh` can install its bundled `paperclipai` dependency
+- Have network access for the first install so `companies` can install its bundled `paperclipai` dependency
 - If you are targeting an existing authenticated Paperclip instance, provide board auth through your normal Paperclip context or explicit `--api-key`
 
 ## Import a Company
 
 ```bash
-npx companies.sh add paperclipai/company-template
+npx companies add paperclipai/company-template
 ```
 
 ### Common Flows
 
 ```bash
 # Interactive import
-npx companies.sh add
+npx companies add
 
 # Interactive import with the local Paperclip auto-bootstrap flow
-npx companies.sh add ./fixtures/minimal-company
+npx companies add ./fixtures/minimal-company
 
 # Import from GitHub into a new Paperclip company
-npx companies.sh add paperclipai/company-template --target new
+npx companies add paperclipai/company-template --target new
 
 # Import into an existing company
-npx companies.sh add paperclipai/company-template --target existing -C <company-id>
+npx companies add paperclipai/company-template --target existing -C <company-id>
 
 # Preview an import without applying changes
-npx companies.sh add ./my-company --target existing -C <company-id> --dry-run
+npx companies add ./my-company --target existing -C <company-id> --dry-run
 
 # Import company metadata and agents only (default)
-npx companies.sh add paperclipai/company-template --include company,agents
+npx companies add paperclipai/company-template --include company,agents
 
 # Import the full package
-npx companies.sh add paperclipai/company-template --include company,agents,projects,tasks,skills
+npx companies add paperclipai/company-template --include company,agents,projects,tasks,skills
 
 # Import specific agents only
-npx companies.sh add paperclipai/company-template --agents ceo,cto
+npx companies add paperclipai/company-template --agents ceo,cto
 
 # Non-interactive usage for scripts or CI
-npx companies.sh add paperclipai/company-template --target new -y
+npx companies add paperclipai/company-template --target new -y
 
 # Use an already-running Paperclip instance at a specific URL
-npx companies.sh add paperclipai/company-template --connection custom-url --api-base http://127.0.0.1:3100
+npx companies add paperclipai/company-template --connection custom-url --api-base http://127.0.0.1:3100
 ```
 
 ### Source Formats
 
 ```bash
 # GitHub shorthand
-npx companies.sh add paperclipai/company-template
+npx companies add paperclipai/company-template
 
 # Full GitHub URL
-npx companies.sh add https://github.com/paperclipai/company-template
+npx companies add https://github.com/paperclipai/company-template
 
 # Direct tree URL
-npx companies.sh add https://github.com/paperclipai/company-template/tree/main/company
+npx companies add https://github.com/paperclipai/company-template/tree/main/company
 
 # Local path
-npx companies.sh add ./my-company
+npx companies add ./my-company
 ```
 
 ### Options
@@ -99,7 +99,7 @@ Use these when the Paperclip CLI needs explicit connection or profile settings:
 - `auto` is the default. It checks the local Paperclip config, falls back to `http://127.0.0.1:3100`, runs `paperclipai onboard --yes` when no config exists yet, and starts `paperclipai run` if the server is not already up.
 - `custom-url` skips the local bootstrap and expects a reachable Paperclip instance at `--api-base`.
 
-`companies.sh` requires a recent Paperclip build for the company import/export flow. This repo currently pins `paperclipai@2026.324.0-canary.2`, and the wrapper rejects versions older than `2026.324.0-canary.0`.
+`companies` requires a recent Paperclip build for the company import/export flow. This repo currently pins `paperclipai@2026.324.0-canary.7`, and the wrapper rejects versions older than `2026.324.0-canary.0`.
 
 ## Package Layout
 
@@ -121,7 +121,7 @@ An Agent Company is a markdown-first package that describes an AI company as por
 4. Normalize the requested include set and agent filters.
 5. Execute the import through the bundled `paperclipai` CLI.
 
-Because Paperclip performs the actual import, `companies.sh` should be treated as a convenience wrapper rather than a standalone backend client.
+Because Paperclip performs the actual import, `companies` should be treated as a convenience wrapper rather than a standalone backend client.
 
 ## Troubleshooting
 
@@ -139,7 +139,7 @@ export PAPERCLIPAI_CMD=/path/to/paperclipai
 export PAPERCLIPAI_CMD="pnpm --dir /path/to/paperclip paperclipai"
 ```
 
-If you override the command, `companies.sh` still requires `paperclipai >= 2026.324.0-canary.0`.
+If you override the command, `companies` still requires `paperclipai >= 2026.324.0-canary.0`.
 
 ### Import fails with collision errors
 
@@ -164,6 +164,12 @@ export COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000
 | `PAPERCLIPAI_CMD` | Override the `paperclipai` executable or full command. |
 | `COMPANIES_PAPERCLIP_START_TIMEOUT_MS` | Override the local Paperclip readiness timeout in milliseconds. Default: `120000`. |
 
+## Maintainers
+
+- `companies` publishes to npm with calendar versions: stable `YYYY.MDD.P`, canary `YYYY.MDD.P-canary.N`.
+- Canary publishes are intended to run automatically from GitHub `master`; stable publishes are manual promotions through GitHub Actions.
+- Release docs live in [doc/RELEASING.md](doc/RELEASING.md), [doc/PUBLISHING.md](doc/PUBLISHING.md), and [doc/RELEASE-AUTOMATION-SETUP.md](doc/RELEASE-AUTOMATION-SETUP.md).
+
 ## Development
 
 ```bash
@@ -179,7 +185,7 @@ Use this to verify the wrapper can reach a local Paperclip instance without appl
 ```bash
 export PAPERCLIPAI_CMD="pnpm --dir /path/to/paperclip run paperclipai"
 
-npx companies.sh add paperclipai/company-template \
+npx companies add paperclipai/company-template \
   --target new \
   --dry-run \
   --yes \

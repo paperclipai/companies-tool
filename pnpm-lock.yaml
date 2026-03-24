@@ -15,8 +15,8 @@ importers:
         specifier: ^13.1.0
         version: 13.1.0
       paperclipai:
-        specifier: 2026.324.0-canary.2
-        version: 2026.324.0-canary.2(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0)
+        specifier: 2026.324.0-canary.7
+        version: 2026.324.0-canary.7(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0)
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
@@ -633,38 +633,38 @@ packages:
     resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
     engines: {node: '>= 20.19.0'}
 
-  '@paperclipai/adapter-claude-local@2026.324.0-canary.2':
-    resolution: {integrity: sha512-hBYCG7K4vH+rqsz+YLtESDaOqr89CYlhoD/16olh+WK9WA/lxdm8IlzomWSgcILpeSLmP+rzY1rF/4IvmCz2Yw==}
+  '@paperclipai/adapter-claude-local@2026.324.0-canary.7':
+    resolution: {integrity: sha512-wrjiIHfOK+rl51JWstAT6hX1W22HnW3aKZQjV1ciGQFCjCTmt3x7MLM1aCSLg/Afh05VmHuhU5/ynE+lwZ2l6A==}
 
-  '@paperclipai/adapter-codex-local@2026.324.0-canary.2':
-    resolution: {integrity: sha512-njr9VfUY3owiUdjAto5e8hAicfgwyTMZnPAB8ns5ULvwH9LGmq3K+dx2AQfIHg3aA6jtXdoCoftQUL0Rr5j/vA==}
+  '@paperclipai/adapter-codex-local@2026.324.0-canary.7':
+    resolution: {integrity: sha512-WTUy55krfpAwtpqmecwzcZCLASamJi2pJfT3LzakuYhZD3A9rBNp5InWR0wrYqOC1145XUrklnOZDLoveNRPaA==}
 
-  '@paperclipai/adapter-cursor-local@2026.324.0-canary.2':
-    resolution: {integrity: sha512-D5Vgo6mw+ZWa6SXgkhwJl/qrhk40MWn6RK+KUuU8Mn1cLRy4uxMgPV2XEATRgaqQB7unZs9eA+Cb0p5Om1b1AA==}
+  '@paperclipai/adapter-cursor-local@2026.324.0-canary.7':
+    resolution: {integrity: sha512-y0ctU77PKGzE+Bo0EAS562qJUumWXwDYbJGWFsJleNnMjf4ErFZdz7irum+EZ4XaA7p85qbhJuB9KEAyoxVdbw==}
 
-  '@paperclipai/adapter-gemini-local@2026.324.0-canary.2':
-    resolution: {integrity: sha512-ijueuS3ebIRfAC2hIWIOQN3AAP6lHwvSdZLf5EI+UkS1L5EsBKLBCdvsjrV0iT7RxG+syhbCx2Z+ASfH1nFHWQ==}
+  '@paperclipai/adapter-gemini-local@2026.324.0-canary.7':
+    resolution: {integrity: sha512-+2NeN5SJ4YJVI1UZlETZFKR0LVLC4ZBdtKvjd19tHdDLGMt5XNbMuFyIZJAFKUnP/HSUWOyP88CWdKY3+1rRow==}
 
-  '@paperclipai/adapter-openclaw-gateway@2026.324.0-canary.2':
-    resolution: {integrity: sha512-nfTRgrmeQxdxMzavMZBewUE9nLGMprq2fX3jH2ANIgcO8eo1/NVzNPdP02Hfwp6+nGkrtwcUWBl9GwIaiR1qWA==}
+  '@paperclipai/adapter-openclaw-gateway@2026.324.0-canary.7':
+    resolution: {integrity: sha512-0PBvfEFf4KCeRTR1Nnt2O8MEoymp2c2Do4n9wyrdnqS2fIf5WmK+tp5+ohUeLsGF8NsPGav3HgMuViCc2d+n3g==}
 
-  '@paperclipai/adapter-opencode-local@2026.324.0-canary.2':
-    resolution: {integrity: sha512-lStkVTttKawOGX1Yuy9SCUWThpPXSv0OJJXoZIfNREBPVt62XsPT+WL5mEG/QAYqSDF051mH890tsGfBviB0Vg==}
+  '@paperclipai/adapter-opencode-local@2026.324.0-canary.7':
+    resolution: {integrity: sha512-RCtdUd7z2sv4tVmvB156/+eOgenjBMw+0ICqVey0wlCbNS4PA8n5h7K1eCB/PiwaVYp8ybahFmb9lCLkWqyr6Q==}
 
-  '@paperclipai/adapter-pi-local@2026.324.0-canary.2':
-    resolution: {integrity: sha512-26cq3vWfVCNI6le4xMllechGUO+2GHjhXCWsFjUOL/k1v030eszYuNf/x/c0XJmKk0FoBzwq23IYeqX7baZIzg==}
+  '@paperclipai/adapter-pi-local@2026.324.0-canary.7':
+    resolution: {integrity: sha512-LD0/07/hFiiu0KJxz4NmZ2macHWsvPYt29B3GB0neaIDpd1QLU/FugxYBCrfW70daJhZE9lO5wgCzpuF1e21UQ==}
 
   '@paperclipai/adapter-utils@0.3.1':
     resolution: {integrity: sha512-W66k+hJkQE8ma0asM/Sd90AC8HHy/BLG/sd0aOC+rDWw+gOasQyUkTnDoPv1zhQuTyKEEvLFV6ByOOKqEiAz/A==}
 
-  '@paperclipai/adapter-utils@2026.324.0-canary.2':
-    resolution: {integrity: sha512-OeGKRntlspdQqsJ4TLEBc0+xM4PHXlXDGyFknDFGRPVM0OctX63QPM9FKSq0pa7fPNBISt7PkvXCNPfotUt99g==}
+  '@paperclipai/adapter-utils@2026.324.0-canary.7':
+    resolution: {integrity: sha512-jBD17e7Gym4R/NsghnStWbGwmpMKnvSrVhE5ePGhtssWSM3B1eD4tZFOum01LvPbs1zHMw3gqlRzZh/w3NRTIA==}
 
-  '@paperclipai/db@2026.324.0-canary.2':
-    resolution: {integrity: sha512-rhbESy90QQILsYRFQdhC19bfxL7dmy/B7iP4ZnIGNstOaTeE4zF496hw2M/nlcF60szm89AduXmtODz6T1T0Jg==}
+  '@paperclipai/db@2026.324.0-canary.7':
+    resolution: {integrity: sha512-yp9z+IQrF0u+sl3LZ3CLK5knVEUF3wWsnTcAZMU+gwFVAXwfmfncZeGF7qN/h8MwJYyo7o+8GYuFwrZ2IT/ECw==}
 
-  '@paperclipai/plugin-sdk@2026.324.0-canary.2':
-    resolution: {integrity: sha512-2UCEUaIAOpZYIwYcwB4AyrMfOfsh0HtBtzrYW2L6Tf9ImFlEh3kHEd3FRUSDXPYNmqweZbapoF9OuoJV87uUNg==}
+  '@paperclipai/plugin-sdk@2026.324.0-canary.7':
+    resolution: {integrity: sha512-ojy1upw92ZOcMbD3wjEt+mKwpKef2ec0LyePGM78e/APJqK7iZEyRVQkqk4dxqdFnpDtkg+3PPPuS7A9kdbZdQ==}
     hasBin: true
     peerDependencies:
       react: '>=18'
@@ -672,11 +672,11 @@ packages:
       react:
         optional: true
 
-  '@paperclipai/server@2026.324.0-canary.2':
-    resolution: {integrity: sha512-6JVG6LFv+7NUNLjICZeBOXmnbiIHjyOMxZSIPTgCgM0SCmntx0Qr1ca3p/9Nk+qsqr+Oxa2npQDDXgpjrWxHww==}
+  '@paperclipai/server@2026.324.0-canary.7':
+    resolution: {integrity: sha512-G4greRF0hyEWyPKp9iWut0zKRKoUDI3UmxmJiM41eix1gJYpOsxawLQ9RXDS8lOY0gb2qW76FIfJwSfXErX9ww==}
 
-  '@paperclipai/shared@2026.324.0-canary.2':
-    resolution: {integrity: sha512-EiHbFvxnONkwHyYPQurWidFWxNWRN5cbppoSNu5xTW7jxzleAdyRNidWnqMvlrXmM8r92GBPvSRB3FOdm5Qiog==}
+  '@paperclipai/shared@2026.324.0-canary.7':
+    resolution: {integrity: sha512-7kCfpUxfYj5DX947FablVHb0lJWKDWLd6ujTFK+REGBkOmRwyjWYb8F3AJynonZD1ChupYE7jrCOyqecDcpEXA==}
 
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
@@ -1501,8 +1501,8 @@ packages:
     resolution: {integrity: sha512-smsWv2LzFjP03xmvFoJ331ss6h+jixfA4UUV/Bsiyuu4YJPfN+FIQGOIiv4w9/+MoHkfkJ22UIaQWRVFRfH6Vw==}
     engines: {node: '>=20'}
 
-  paperclipai@2026.324.0-canary.2:
-    resolution: {integrity: sha512-tBlNsPQbYf4wKXfM+mG8QmbJIN4LUHs8cuiJEEFeGmobOGF2s11AA4NDRuqC4bhKX4Hda/niWHYOl3PFilZMxA==}
+  paperclipai@2026.324.0-canary.7:
+    resolution: {integrity: sha512-lpDuqrTYHKM3L9ChfEtXcA0ZhvEBEU3W8QVufZb9v0/r1lhVmqRiyxX+A2o/V3ekNfEsxCbgePYieWZPCNhvLA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -2604,52 +2604,52 @@ snapshots:
 
   '@noble/hashes@2.0.1': {}
 
-  '@paperclipai/adapter-claude-local@2026.324.0-canary.2':
+  '@paperclipai/adapter-claude-local@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
       picocolors: 1.1.1
 
-  '@paperclipai/adapter-codex-local@2026.324.0-canary.2':
+  '@paperclipai/adapter-codex-local@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
       picocolors: 1.1.1
 
-  '@paperclipai/adapter-cursor-local@2026.324.0-canary.2':
+  '@paperclipai/adapter-cursor-local@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
       picocolors: 1.1.1
 
-  '@paperclipai/adapter-gemini-local@2026.324.0-canary.2':
+  '@paperclipai/adapter-gemini-local@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
       picocolors: 1.1.1
 
-  '@paperclipai/adapter-openclaw-gateway@2026.324.0-canary.2':
+  '@paperclipai/adapter-openclaw-gateway@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
       picocolors: 1.1.1
       ws: 8.20.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@paperclipai/adapter-opencode-local@2026.324.0-canary.2':
+  '@paperclipai/adapter-opencode-local@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
       picocolors: 1.1.1
 
-  '@paperclipai/adapter-pi-local@2026.324.0-canary.2':
+  '@paperclipai/adapter-pi-local@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
       picocolors: 1.1.1
 
   '@paperclipai/adapter-utils@0.3.1': {}
 
-  '@paperclipai/adapter-utils@2026.324.0-canary.2': {}
+  '@paperclipai/adapter-utils@2026.324.0-canary.7': {}
 
-  '@paperclipai/db@2026.324.0-canary.2(kysely@0.28.14)(pg@8.20.0)':
+  '@paperclipai/db@2026.324.0-canary.7(kysely@0.28.14)(pg@8.20.0)':
     dependencies:
-      '@paperclipai/shared': 2026.324.0-canary.2
+      '@paperclipai/shared': 2026.324.0-canary.7
       drizzle-orm: 0.38.4(kysely@0.28.14)(pg@8.20.0)(postgres@3.4.8)
       embedded-postgres: 18.1.0-beta.16
       postgres: 3.4.8
@@ -2684,25 +2684,25 @@ snapshots:
       - sql.js
       - sqlite3
 
-  '@paperclipai/plugin-sdk@2026.324.0-canary.2':
+  '@paperclipai/plugin-sdk@2026.324.0-canary.7':
     dependencies:
-      '@paperclipai/shared': 2026.324.0-canary.2
+      '@paperclipai/shared': 2026.324.0-canary.7
       zod: 3.25.76
 
-  '@paperclipai/server@2026.324.0-canary.2(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0)(postgres@3.4.8)':
+  '@paperclipai/server@2026.324.0-canary.7(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0)(postgres@3.4.8)':
     dependencies:
       '@aws-sdk/client-s3': 3.1015.0
-      '@paperclipai/adapter-claude-local': 2026.324.0-canary.2
-      '@paperclipai/adapter-codex-local': 2026.324.0-canary.2
-      '@paperclipai/adapter-cursor-local': 2026.324.0-canary.2
-      '@paperclipai/adapter-gemini-local': 2026.324.0-canary.2
-      '@paperclipai/adapter-openclaw-gateway': 2026.324.0-canary.2
-      '@paperclipai/adapter-opencode-local': 2026.324.0-canary.2
-      '@paperclipai/adapter-pi-local': 2026.324.0-canary.2
-      '@paperclipai/adapter-utils': 2026.324.0-canary.2
-      '@paperclipai/db': 2026.324.0-canary.2(kysely@0.28.14)(pg@8.20.0)
-      '@paperclipai/plugin-sdk': 2026.324.0-canary.2
-      '@paperclipai/shared': 2026.324.0-canary.2
+      '@paperclipai/adapter-claude-local': 2026.324.0-canary.7
+      '@paperclipai/adapter-codex-local': 2026.324.0-canary.7
+      '@paperclipai/adapter-cursor-local': 2026.324.0-canary.7
+      '@paperclipai/adapter-gemini-local': 2026.324.0-canary.7
+      '@paperclipai/adapter-openclaw-gateway': 2026.324.0-canary.7
+      '@paperclipai/adapter-opencode-local': 2026.324.0-canary.7
+      '@paperclipai/adapter-pi-local': 2026.324.0-canary.7
+      '@paperclipai/adapter-utils': 2026.324.0-canary.7
+      '@paperclipai/db': 2026.324.0-canary.7(kysely@0.28.14)(pg@8.20.0)
+      '@paperclipai/plugin-sdk': 2026.324.0-canary.7
+      '@paperclipai/shared': 2026.324.0-canary.7
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
       better-auth: 1.4.18(drizzle-orm@0.38.4(kysely@0.28.14)(pg@8.20.0)(postgres@3.4.8))(pg@8.20.0)
@@ -2773,7 +2773,7 @@ snapshots:
       - vitest
       - vue
 
-  '@paperclipai/shared@2026.324.0-canary.2':
+  '@paperclipai/shared@2026.324.0-canary.7':
     dependencies:
       zod: 3.25.76
 
@@ -3633,10 +3633,10 @@ snapshots:
       powershell-utils: 0.1.0
       wsl-utils: 0.3.1
 
-  paperclipai@2026.324.0-canary.2(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0):
+  paperclipai@2026.324.0-canary.7(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0):
     dependencies:
       '@clack/prompts': 0.10.1
-      '@paperclipai/server': 2026.324.0-canary.2(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0)(postgres@3.4.8)
+      '@paperclipai/server': 2026.324.0-canary.7(@noble/hashes@2.0.1)(kysely@0.28.14)(pg@8.20.0)(postgres@3.4.8)
       commander: 13.1.0
       dotenv: 17.3.1
       drizzle-orm: 0.38.4(kysely@0.28.14)(pg@8.20.0)(postgres@3.4.8)
