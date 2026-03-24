@@ -16,7 +16,8 @@ Use these scripts:
 The npm package is:
 
 - package name: `companies.sh`
-- executable: `companies`
+- executable: `companies.sh`
+- compatibility alias: `companies`
 - repository: `paperclipai/companies-tool`
 
 The repo intentionally publishes a single package. There is no workspace version rewrite step like the main Paperclip repo needs.

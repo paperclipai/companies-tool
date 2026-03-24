@@ -12,7 +12,7 @@ The CLI for importing [Agent Companies](https://companies.io) into **Paperclip**
 
 ## Import a Company
 
-The npm package is `companies.sh`. It installs the `companies` executable.
+The npm package is `companies.sh`. It installs the `companies.sh` executable and keeps `companies` as a compatibility alias.
 
 ```bash
 npx companies.sh add paperclipai/company-template

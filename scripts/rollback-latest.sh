@@ -19,7 +19,7 @@ Examples:
   ./scripts/rollback-latest.sh 2026.324.0 --dry-run
 
 Notes:
-  - This repoints the npm dist-tag "latest" for companies.
+  - This repoints the npm dist-tag "latest" for companies.sh.
   - It does not unpublish anything.
 EOF
 }

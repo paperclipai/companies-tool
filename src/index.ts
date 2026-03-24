@@ -377,7 +377,7 @@ export function buildExportPaperclipArgs(input: {
 }
 
 export async function handleAdd(source: string | undefined, options: AddOptions): Promise<void> {
-  intro("companies");
+  intro("companies.sh");
 
   const provider = await pickProvider(options.provider, Boolean(options.yes));
   if (provider !== "paperclip") {
@@ -432,7 +432,7 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
 }
 
 export async function handleList(options: BaseOptions): Promise<void> {
-  intro("companies");
+  intro("companies.sh");
   const provider = await pickProvider(options.provider, Boolean(options.yes));
   if (provider !== "paperclip") {
     fail("Only paperclip is supported.");
@@ -447,7 +447,7 @@ export async function handleList(options: BaseOptions): Promise<void> {
 }
 
 export async function handleExport(selector: string, options: ExportOptions): Promise<void> {
-  intro("companies");
+  intro("companies.sh");
   const provider = await pickProvider(options.provider, Boolean(options.yes));
   if (provider !== "paperclip") {
     fail("Only paperclip is supported.");
@@ -492,7 +492,7 @@ export async function handleExport(selector: string, options: ExportOptions): Pr
 const program = new Command();
 
 program
-  .name("companies")
+  .name("companies.sh")
   .description("A skills-style CLI for importing Agent Companies into supported providers")
   .version(packageVersion);
 

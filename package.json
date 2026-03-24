@@ -4,6 +4,7 @@
   "description": "A skills-style CLI for importing Agent Companies into supported providers",
   "type": "module",
   "bin": {
+    "companies.sh": "./dist/index.js",
     "companies": "./dist/index.js"
   },
   "files": [
