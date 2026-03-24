@@ -37,37 +37,53 @@ That path uses the bundled `paperclipai` canary, runs `paperclipai onboard --yes
 
 ## Hand-Test Against A Docker Paperclip Instance
 
-Use this when you want a clean-room Paperclip instance in Docker but still want to open the UI from your host browser.
-
-```bash
-docker build -f Dockerfile.smoke -t companies-handtest .
-docker run --rm -it -p 3210:3210 --entrypoint bash companies-handtest
-```
-
-Inside the container shell:
-
-```bash
-export HOST=0.0.0.0
-export PORT=3210
-export TMPDIR=/tmp
-DATA_DIR=$(mktemp -d /tmp/companies-docker-handtest.XXXXXX)
-
-node dist/index.js add ./fixtures/minimal-company \
-  --yes \
-  --data-dir "$DATA_DIR" \
-  --target new \
-  --new-company-name "Docker Hand Test"
-
-node dist/index.js list --yes --data-dir "$DATA_DIR"
-```
-
-Keep that container shell open, then visit `http://127.0.0.1:3210` on the host and confirm that **Docker Hand Test** appears in the UI.
-
-If you only want the non-interactive smoke verification and do not need the browser UI, run:
+Use this when you want the automated clean-room Docker smoke test. It packages the current CLI, starts a fresh Linux container with Node 20, installs only production dependencies inside that container, then verifies the wrapper bootstraps Paperclip, imports the fixture, and serves the UI on the container loopback interface without any standalone `paperclipai` binary on `PATH`.
 
 ```bash
 pnpm test:docker
 ```
+
+If you want a manual shell inside the same clean-room setup, run:
+
+```bash
+tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/companies-docker-handtest.XXXXXX")"
+pnpm pack --pack-destination "$tmpdir"
+tar -xzf "$tmpdir"/companies.sh-*.tgz -C "$tmpdir"
+cp -R fixtures "$tmpdir/package/fixtures"
+
+docker run --rm -it \
+  -e HOME=/app/.home \
+  -e npm_config_cache=/app/.npm-cache \
+  -e TMPDIR=/app/.tmp \
+  -e COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000 \
+  -e HOST=127.0.0.1 \
+  -e PORT=3210 \
+  -e SERVE_UI=true \
+  -e PAPERCLIP_OPEN_ON_LISTEN=false \
+  -v "$tmpdir/package:/app" \
+  -w /app \
+  node:20-bookworm-slim \
+  bash
+```
+
+Inside that shell:
+
+```bash
+mkdir -p "$HOME" "$npm_config_cache"
+mkdir -p "$TMPDIR"
+npm install --omit=dev --no-audit --no-fund
+command -v paperclipai && exit 1
+printf '%s\n' '#!/usr/bin/env bash' 'exec node /app/dist/index.js "$@"' >/app/companies.sh
+chmod +x /app/companies.sh
+ln -s /app/companies.sh /app/companies
+export PATH="/app:$PATH"
+DATA_DIR=$(mktemp -d "$TMPDIR/companies-docker-handtest.XXXXXX")
+companies.sh add ./fixtures/minimal-company --yes --data-dir "$DATA_DIR" --target new --new-company-name "Docker Hand Test"
+companies.sh list --yes --data-dir "$DATA_DIR"
+node --input-type=module -e 'const response = await fetch("http://127.0.0.1:3210/"); console.log(response.status);'
+```
+
+That loopback binding is intentional: Paperclip quickstart uses `local_trusted`, which requires `127.0.0.1` inside the container. The automated smoke test verifies the UI over container-local HTTP rather than Docker port publishing.
 
 ## Dry-Run Smoke Test
 
