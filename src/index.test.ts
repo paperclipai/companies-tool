@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import test from "node:test";
 import {
   buildAddPaperclipArgs,
   buildExportPaperclipArgs,
   buildListPaperclipArgs,
+  isDirectCliInvocation,
   pickProvider,
   promptPaperclipConnection,
   promptNewCompanyName,
@@ -105,4 +109,21 @@ test("promptPaperclipConnection treats apiBase as custom-url", async () => {
     await promptPaperclipConnection({ apiBase: "http://localhost:3100/" }),
     { mode: "custom-url", apiBase: "http://localhost:3100" },
   );
+});
+
+test("isDirectCliInvocation treats npm bin symlinks as direct execution", () => {
+  const dir = mkdtempSync(join(tmpdir(), "companies-cli-"));
+  const modulePath = join(dir, "dist-index.js");
+  const shimPath = join(dir, "companies.sh");
+
+  try {
+    writeFileSync(modulePath, "console.log('test');\n");
+    symlinkSync(modulePath, shimPath);
+
+    assert.equal(isDirectCliInvocation(shimPath, new URL(`file://${modulePath}`).href), true);
+    assert.equal(isDirectCliInvocation(modulePath, new URL(`file://${modulePath}`).href), true);
+    assert.equal(isDirectCliInvocation(join(dir, "other.js"), new URL(`file://${modulePath}`).href), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

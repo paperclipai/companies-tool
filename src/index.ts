@@ -3,7 +3,7 @@
 import { intro, outro, select, text, confirm, isCancel, cancel, note } from "@clack/prompts";
 import { Command } from "commander";
 import pc from "picocolors";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -66,6 +66,20 @@ function readPackageVersion(): string {
     return typeof packageJson.version === "string" ? packageJson.version : "0.0.0";
   } catch {
     return "0.0.0";
+  }
+}
+
+export function isDirectCliInvocation(executedPath: string | undefined, moduleUrl: string): boolean {
+  if (!executedPath) {
+    return false;
+  }
+
+  const modulePath = fileURLToPath(moduleUrl);
+
+  try {
+    return realpathSync(executedPath) === realpathSync(modulePath);
+  } catch {
+    return executedPath === modulePath;
   }
 }
 
@@ -544,9 +558,6 @@ addCommonOptions(
     }),
 );
 
-const executedPath = process.argv[1];
-const modulePath = fileURLToPath(import.meta.url);
-
-if (executedPath && modulePath === executedPath) {
+if (isDirectCliInvocation(process.argv[1], import.meta.url)) {
   program.parseAsync().catch((error) => fail(error instanceof Error ? error.message : String(error)));
 }
