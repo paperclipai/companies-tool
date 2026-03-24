@@ -99,6 +99,26 @@ Use these when the Paperclip CLI needs explicit connection or profile settings:
 
 `companies.sh` requires a recent Paperclip build for the company import flow. This repo currently pins `paperclipai@2026.324.0-canary.7`, and the wrapper rejects versions older than `2026.324.0-canary.0`.
 
+## Telemetry
+
+`companies.sh` can send one anonymous event after a successful import to help us understand package adoption.
+
+- Telemetry is strict opt-in.
+- The first interactive `add` run shows a preview of the exact fields before anything is sent.
+- Telemetry stays disabled in CI environments.
+- The event payload uses a pseudonymous install id that rotates every 30 days.
+- Repo URLs, local paths, company names, and command arguments are not sent.
+
+Successful import events include only:
+
+- the app slug: `companies-sh`
+- the event name: `install.completed`
+- the package `company_slug` from `COMPANY.md`
+- the source kind (`github`, `local`, or `url`)
+- the target mode (`new` or `existing`)
+
+Preference is stored locally at `~/.config/companies.sh/telemetry.json` unless `XDG_CONFIG_HOME` overrides the base path. Remove that file to reset consent or rotate the install id immediately.
+
 ## Package Layout
 
 An Agent Company is a markdown-first package that describes an AI company as portable files:
@@ -173,10 +193,14 @@ export COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000
 | -------------------------------------- | ---------------------------------------------------------------------------------- |
 | `PAPERCLIPAI_CMD`                      | Override the `paperclipai` executable or full command.                             |
 | `COMPANIES_PAPERCLIP_START_TIMEOUT_MS` | Override the local Paperclip readiness timeout in milliseconds. Default: `120000`. |
+| `COMPANIES_TELEMETRY`                  | Explicitly enable or disable telemetry. Accepted values: `1/0`, `true/false`, `on/off`. |
+| `COMPANIES_TELEMETRY_INGEST_URL`       | Override the telemetry ingest endpoint for testing. Default: `https://rusqrrg391.execute-api.us-east-1.amazonaws.com/ingest`. |
+| `DISABLE_TELEMETRY`                    | Disable telemetry regardless of saved preference.                                  |
+| `DO_NOT_TRACK`                         | Alternative way to disable telemetry.                                              |
 
 ## Contributing
 
-See [DEVELOPING.md](DEVELOPING.md) for build instructions, testing workflows, and maintainer notes.
+See [DEVELOPING.md](DEVELOPING.md) for build instructions, testing workflows, and maintainer notes. In particular, `pnpm test:docker` exercises the packaged `companies.sh` runtime inside a clean Linux container and verifies the local Paperclip auto-bootstrap path.
 
 ## License
 

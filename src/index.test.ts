@@ -12,6 +12,7 @@ import {
   promptNewCompanyName,
   promptSource,
   promptTargetMode,
+  resolvePaperclipRunApiBase,
 } from "./index.js";
 
 test("buildAddPaperclipArgs translates wrapper add options to paperclip import args", () => {
@@ -75,6 +76,11 @@ test("promptPaperclipConnection treats apiBase as custom-url", async () => {
     await promptPaperclipConnection({ apiBase: "http://localhost:3100/" }),
     { mode: "custom-url", apiBase: "http://localhost:3100" },
   );
+});
+
+test("resolvePaperclipRunApiBase only forwards apiBase for custom-url mode", () => {
+  assert.equal(resolvePaperclipRunApiBase("auto", "http://127.0.0.1:3100"), undefined);
+  assert.equal(resolvePaperclipRunApiBase("custom-url", "http://localhost:3100"), "http://localhost:3100");
 });
 
 test("isDirectCliInvocation treats npm bin symlinks as direct execution", () => {

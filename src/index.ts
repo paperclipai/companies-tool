@@ -24,6 +24,10 @@ import {
   resolveProvider,
 } from "./flags.js";
 import { normalizeSourceInput } from "./sources.js";
+import {
+  prepareInstallTelemetry,
+  sendInstallCompletedTelemetry,
+} from "./telemetry.js";
 
 type TargetMode = "new" | "existing";
 type CollisionMode = "rename" | "skip" | "replace";
@@ -269,6 +273,13 @@ export async function promptNewCompanyName(
   return coerceCancel(result).trim() || undefined;
 }
 
+export function resolvePaperclipRunApiBase(
+  mode: ConnectionMode,
+  apiBase: string,
+): string | undefined {
+  return mode === "custom-url" ? apiBase : undefined;
+}
+
 async function preparePaperclip(options: BaseOptions): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
   const connection = await promptPaperclipConnection(options);
   if (connection.mode === "auto") {
@@ -342,7 +353,7 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
   const prepared = await preparePaperclip(options);
   const paperclipOptions: AddOptions = {
     ...options,
-    apiBase: prepared.apiBase,
+    apiBase: resolvePaperclipRunApiBase(prepared.mode, prepared.apiBase),
   };
 
   const include = normalizeIncludeValues(options.include);
@@ -350,6 +361,19 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
 
   const normalizedSource = await promptSource(source, Boolean(options.yes));
   const target = await promptTargetMode(options.target, Boolean(options.yes));
+
+  const telemetry = await prepareInstallTelemetry(normalizedSource, target, {
+    skipPrompts: Boolean(options.yes),
+    isTTY: Boolean(process.stdin.isTTY),
+    promptForConsent: async (preview) => {
+      note(preview.body, preview.title);
+      const consent = await confirm({
+        message: `Enable anonymous telemetry for future successful installs?`,
+        initialValue: false,
+      });
+      return coerceCancel(consent);
+    },
+  });
 
   const companyId = target === "existing"
     ? (options.companyId?.trim() || await promptExistingCompanyId(paperclipOptions))
@@ -378,11 +402,13 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
       `source: ${normalizedSource}`,
       `target: ${target}${companyId ? ` (${companyId})` : ""}`,
       `include: ${include.includeArg}`,
+      `telemetry: ${telemetry.enabled ? "enabled" : "disabled"}${telemetry.companySlug ? ` (${telemetry.companySlug})` : ""}`,
     ].join("\n"),
     "Running",
   );
 
   await runPaperclip(args, paperclipOptions);
+  await sendInstallCompletedTelemetry(telemetry);
   outro("Paperclip import finished.");
 }
 
@@ -396,7 +422,7 @@ export async function handleList(options: BaseOptions): Promise<void> {
   const prepared = await preparePaperclip(options);
   await runPaperclip(buildListPaperclipArgs(), {
     ...options,
-    apiBase: prepared.apiBase,
+    apiBase: resolvePaperclipRunApiBase(prepared.mode, prepared.apiBase),
   });
   outro("Paperclip company list finished.");
 }
