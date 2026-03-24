@@ -13,7 +13,6 @@ import {
   listPaperclipCompanies,
   normalizeApiBase,
   printWarnings,
-  resolveCompanySelector,
   runPaperclip,
   type CommonPaperclipOptions,
   type PaperclipBootstrapResult,
@@ -22,7 +21,6 @@ import {
 import {
   INCLUDE_OPTION_HELP_TEXT,
   normalizeIncludeValues,
-  normalizeTaskSelectors,
   resolveProvider,
 } from "./flags.js";
 import { normalizeSourceInput } from "./sources.js";
@@ -44,16 +42,6 @@ interface AddOptions extends BaseOptions {
   agents?: string;
   collision?: CollisionMode;
   dryRun?: boolean;
-}
-
-interface ExportOptions extends BaseOptions {
-  out?: string;
-  include?: string;
-  skills?: string;
-  projects?: string;
-  tasks?: string;
-  projectTasks?: string;
-  expandReferencedSkills?: boolean;
 }
 
 const INCLUDE_OPTION_DESCRIPTION = `Comma-separated include set: ${INCLUDE_OPTION_HELP_TEXT}`;
@@ -343,53 +331,6 @@ export function buildListPaperclipArgs(): string[] {
   return ["company", "list"];
 }
 
-export function buildExportPaperclipArgs(input: {
-  companyId: string;
-  outDir: string;
-  includeArg: string;
-  skills?: string;
-  projects?: string;
-  tasks?: string;
-  projectTasks?: string;
-  expandReferencedSkills?: boolean;
-}): string[] {
-  const args = [
-    "company",
-    "export",
-    input.companyId,
-    "--out",
-    input.outDir,
-    "--include",
-    input.includeArg,
-  ];
-
-  const skills = normalizeTaskSelectors(input.skills);
-  if (skills.length > 0) {
-    args.push("--skills", skills.join(","));
-  }
-
-  const projects = normalizeTaskSelectors(input.projects);
-  if (projects.length > 0) {
-    args.push("--projects", projects.join(","));
-  }
-
-  const tasks = normalizeTaskSelectors(input.tasks);
-  if (tasks.length > 0) {
-    args.push("--issues", tasks.join(","));
-  }
-
-  const projectTasks = normalizeTaskSelectors(input.projectTasks);
-  if (projectTasks.length > 0) {
-    args.push("--project-issues", projectTasks.join(","));
-  }
-
-  if (input.expandReferencedSkills) {
-    args.push("--expand-referenced-skills");
-  }
-
-  return args;
-}
-
 export async function handleAdd(source: string | undefined, options: AddOptions): Promise<void> {
   intro("companies.sh");
 
@@ -460,49 +401,6 @@ export async function handleList(options: BaseOptions): Promise<void> {
   outro("Paperclip company list finished.");
 }
 
-export async function handleExport(selector: string, options: ExportOptions): Promise<void> {
-  intro("companies.sh");
-  const provider = await pickProvider(options.provider, Boolean(options.yes));
-  if (provider !== "paperclip") {
-    fail("Only paperclip is supported.");
-  }
-
-  const prepared = await preparePaperclip(options);
-  const paperclipOptions: ExportOptions = {
-    ...options,
-    apiBase: prepared.apiBase,
-  };
-
-  const include = normalizeIncludeValues(options.include);
-  printWarnings(include.warnings);
-
-  const outDir = options.out?.trim() || await (async () => {
-    if (options.yes) {
-      throw new Error("--out is required in non-interactive mode.");
-    }
-    const result = await text({
-      message: "Where should the exported company package be written?",
-      placeholder: "./company-package",
-    });
-    return coerceCancel(result).trim();
-  })();
-
-  const companyId = await resolveCompanySelector(selector, paperclipOptions);
-  const args = buildExportPaperclipArgs({
-    companyId,
-    outDir,
-    includeArg: include.includeArg,
-    skills: options.skills,
-    projects: options.projects,
-    tasks: options.tasks,
-    projectTasks: options.projectTasks,
-    expandReferencedSkills: options.expandReferencedSkills,
-  });
-
-  await runPaperclip(args, paperclipOptions);
-  outro("Paperclip export finished.");
-}
-
 const program = new Command();
 
 program
@@ -537,24 +435,6 @@ addCommonOptions(
     .option("--connection <mode>", "Paperclip connection mode: auto | custom-url")
     .action((options: BaseOptions) => {
       handleList(options).catch((error) => fail(error instanceof Error ? error.message : String(error)));
-    }),
-);
-
-addCommonOptions(
-  program
-    .command("export")
-    .description("Export a provider company as a portable Agent Company package")
-    .argument("<company>", "Company id, issue prefix, or exact company name")
-    .option("--connection <mode>", "Paperclip connection mode: auto | custom-url")
-    .option("--out <path>", "Output directory")
-    .option("--include <values>", INCLUDE_OPTION_DESCRIPTION, "company,agents")
-    .option("--skills <values>", "Comma-separated skill selectors to export")
-    .option("--projects <values>", "Comma-separated project selectors to export")
-    .option("--tasks <values>", "Comma-separated task selectors to export")
-    .option("--project-tasks <values>", "Comma-separated project selectors whose tasks should be exported")
-    .option("--expand-referenced-skills", "Vendor referenced skills into the export package", false)
-    .action((company: string, options: ExportOptions) => {
-      handleExport(company, options).catch((error) => fail(error instanceof Error ? error.message : String(error)));
     }),
 );
 

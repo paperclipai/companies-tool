@@ -5,7 +5,6 @@ import { tmpdir } from "node:os";
 import test from "node:test";
 import {
   buildAddPaperclipArgs,
-  buildExportPaperclipArgs,
   buildListPaperclipArgs,
   isDirectCliInvocation,
   pickProvider,
@@ -49,39 +48,6 @@ test("buildAddPaperclipArgs translates wrapper add options to paperclip import a
 
 test("buildListPaperclipArgs returns the company list command", () => {
   assert.deepEqual(buildListPaperclipArgs(), ["company", "list"]);
-});
-
-test("buildExportPaperclipArgs maps wrapper selectors to paperclip export flags", () => {
-  assert.deepEqual(
-    buildExportPaperclipArgs({
-      companyId: "company-123",
-      outDir: "./exports/acme",
-      includeArg: "company,agents,projects,issues,skills",
-      skills: "base,ops,base",
-      projects: "growth,ops",
-      tasks: "PAP-1,PAP-2,PAP-1",
-      projectTasks: "growth,ops",
-      expandReferencedSkills: true,
-    }),
-    [
-      "company",
-      "export",
-      "company-123",
-      "--out",
-      "./exports/acme",
-      "--include",
-      "company,agents,projects,issues,skills",
-      "--skills",
-      "base,ops",
-      "--projects",
-      "growth,ops",
-      "--issues",
-      "PAP-1,PAP-2",
-      "--project-issues",
-      "growth,ops",
-      "--expand-referenced-skills",
-    ],
-  );
 });
 
 test("pickProvider defaults to paperclip in non-interactive mode", async () => {

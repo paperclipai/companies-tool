@@ -4,6 +4,8 @@ An installer for the [Agent Companies](https://companies.io) open standard.
 
 `companies.sh` imports Agent Company packages into [Paperclip](https://paperclip.ing) from GitHub repos, direct URLs, or local folders. It's a thin, examples-first wrapper around the Paperclip company import flow that hands the normalized import off to the `paperclipai` CLI.
 
+> Browse companies to install at [companies.sh](https://companies.sh)
+
 ## Import a Company
 
 The npm package is `companies.sh`. It installs the `companies.sh` executable and keeps `companies` as a compatibility alias.
@@ -95,7 +97,7 @@ Use these when the Paperclip CLI needs explicit connection or profile settings:
 - `auto` is the default. It checks the local Paperclip config, falls back to `http://127.0.0.1:3100`, runs `paperclipai onboard --yes` when no config exists yet, and starts `paperclipai run` if the server is not already up.
 - `custom-url` skips the local bootstrap and expects a reachable Paperclip instance at `--api-base`.
 
-`companies.sh` requires a recent Paperclip build for the company import/export flow. This repo currently pins `paperclipai@2026.324.0-canary.7`, and the wrapper rejects versions older than `2026.324.0-canary.0`.
+`companies.sh` requires a recent Paperclip build for the company import flow. This repo currently pins `paperclipai@2026.324.0-canary.7`, and the wrapper rejects versions older than `2026.324.0-canary.0`.
 
 ## Package Layout
 
