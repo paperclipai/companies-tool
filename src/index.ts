@@ -407,10 +407,19 @@ export async function handleList(options: BaseOptions): Promise<void> {
   }
 
   const prepared = await preparePaperclip(options);
-  await runPaperclip(buildListPaperclipArgs(), {
+  const paperclipOptions: CommonPaperclipOptions = {
     ...options,
     apiBase: resolvePaperclipRunApiBase(prepared.mode, prepared.apiBase),
-  });
+  };
+
+  const companies = await listPaperclipCompanies(paperclipOptions);
+
+  for (const company of companies) {
+    const status = company.status ?? "unknown";
+    const statusColor = status === "active" ? pc.green(status) : pc.dim(status);
+    console.log(`${pc.bold(company.name)} ${pc.dim(`(${company.id})`)} ${statusColor}`);
+  }
+
   outro("Paperclip company list finished.");
 }
 
