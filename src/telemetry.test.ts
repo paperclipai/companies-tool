@@ -66,7 +66,7 @@ function withMockFetch<T>(mock: FetchMock, callback: () => Promise<T> | T): Prom
   }
 }
 
-test("prepareInstallTelemetry prompts once, stores consent, and resolves a local company slug", async () => {
+test("prepareInstallTelemetry is enabled by default and resolves a local company slug", async () => {
   const configHome = fs.mkdtempSync(path.join(os.tmpdir(), "companies-telemetry-"));
 
   await withEnv({
@@ -76,11 +76,7 @@ test("prepareInstallTelemetry prompts once, stores consent, and resolves a local
     DO_NOT_TRACK: undefined,
     CI: undefined,
   }, async () => {
-    const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new", {
-      skipPrompts: false,
-      isTTY: true,
-      promptForConsent: async () => true,
-    });
+    const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new");
 
     assert.equal(telemetry.enabled, true);
     assert.equal(telemetry.companySlug, "minimal-company");
@@ -88,28 +84,23 @@ test("prepareInstallTelemetry prompts once, stores consent, and resolves a local
     assert.match(telemetry.installId ?? "", /^[0-9a-f-]{36}$/);
 
     const savedState = JSON.parse(fs.readFileSync(getTelemetryStateFilePath(), "utf8")) as {
-      preference: string;
       installId: string;
     };
-    assert.equal(savedState.preference, "enabled");
     assert.equal(savedState.installId, telemetry.installId);
   });
 });
 
-test("prepareInstallTelemetry stays disabled in non-interactive mode without explicit opt-in", async () => {
+test("prepareInstallTelemetry disables telemetry when COMPANIES_TELEMETRY=0", async () => {
   const configHome = fs.mkdtempSync(path.join(os.tmpdir(), "companies-telemetry-"));
 
   await withEnv({
     XDG_CONFIG_HOME: configHome,
-    COMPANIES_TELEMETRY: undefined,
+    COMPANIES_TELEMETRY: "0",
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
     CI: undefined,
   }, async () => {
-    const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new", {
-      skipPrompts: true,
-      isTTY: false,
-    });
+    const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new");
 
     assert.equal(telemetry.enabled, false);
     assert.equal(fs.existsSync(getTelemetryStateFilePath()), false);
@@ -129,7 +120,7 @@ test("prepareInstallTelemetry resolves GitHub company slugs via the GitHub conte
 
   await withEnv({
     XDG_CONFIG_HOME: configHome,
-    COMPANIES_TELEMETRY: "1",
+    COMPANIES_TELEMETRY: undefined,
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
     CI: undefined,
@@ -151,10 +142,6 @@ test("prepareInstallTelemetry resolves GitHub company slugs via the GitHub conte
       const telemetry = await prepareInstallTelemetry(
         "https://github.com/paperclipai/company-template/tree/main/company",
         "existing",
-        {
-          skipPrompts: true,
-          isTTY: false,
-        },
       );
 
       assert.equal(telemetry.enabled, true);
@@ -178,7 +165,7 @@ test("prepareInstallTelemetry resolves GitHub company slugs from owner/repo/path
 
   await withEnv({
     XDG_CONFIG_HOME: configHome,
-    COMPANIES_TELEMETRY: "1",
+    COMPANIES_TELEMETRY: undefined,
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
     CI: undefined,
@@ -200,10 +187,6 @@ test("prepareInstallTelemetry resolves GitHub company slugs from owner/repo/path
       const telemetry = await prepareInstallTelemetry(
         "paperclipai/companies/gstack",
         "existing",
-        {
-          skipPrompts: true,
-          isTTY: false,
-        },
       );
 
       assert.equal(telemetry.enabled, true);
@@ -224,10 +207,7 @@ test("prepareInstallTelemetry disables telemetry in CI even when explicitly enab
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
   }, async () => {
-    const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new", {
-      skipPrompts: true,
-      isTTY: false,
-    });
+    const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new");
 
     assert.equal(telemetry.enabled, false);
   });

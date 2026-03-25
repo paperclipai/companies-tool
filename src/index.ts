@@ -277,22 +277,30 @@ export function resolvePaperclipRunApiBase(
   mode: ConnectionMode,
   apiBase: string,
 ): string | undefined {
-  return apiBase;
+  return mode === "custom-url" ? apiBase : undefined;
 }
 
 async function preparePaperclip(options: BaseOptions): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
   const connection = await promptPaperclipConnection(options);
   if (connection.mode === "auto") {
-    const ready = await ensureLocalPaperclipReady(options);
+    if (!options.yes) {
+      note(
+        [
+          "Starting local Paperclip before import.",
+          "The first Docker run can take a while because Paperclip needs to onboard and boot.",
+        ].join("\n"),
+        "Preparing Paperclip",
+      );
+    }
+
     return {
-      ...ready,
+      ...(await ensureLocalPaperclipReady(options)),
       mode: "auto",
     };
   }
 
-  const ready = await assertPaperclipApiReady(connection.apiBase ?? DEFAULT_PAPERCLIP_API_BASE);
   return {
-    ...ready,
+    ...(await assertPaperclipApiReady(connection.apiBase ?? DEFAULT_PAPERCLIP_API_BASE)),
     mode: "custom-url",
   };
 }
@@ -350,30 +358,19 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
     fail("Only paperclip is supported.");
   }
 
-  const prepared = await preparePaperclip(options);
-  const paperclipOptions: AddOptions = {
-    ...options,
-    apiBase: resolvePaperclipRunApiBase(prepared.mode, prepared.apiBase),
-  };
-
   const include = normalizeIncludeValues(options.include);
   printWarnings(include.warnings);
 
   const normalizedSource = await promptSource(source, Boolean(options.yes));
   const target = await promptTargetMode(options.target, Boolean(options.yes));
 
-  const telemetry = await prepareInstallTelemetry(normalizedSource, target, {
-    skipPrompts: Boolean(options.yes),
-    isTTY: Boolean(process.stdin.isTTY),
-    promptForConsent: async (preview) => {
-      note(preview.body, preview.title);
-      const consent = await confirm({
-        message: `Enable anonymous telemetry for future successful installs?`,
-        initialValue: false,
-      });
-      return coerceCancel(consent);
-    },
-  });
+  const telemetry = await prepareInstallTelemetry(normalizedSource, target);
+
+  const prepared = await preparePaperclip(options);
+  const paperclipOptions: AddOptions = {
+    ...options,
+    apiBase: resolvePaperclipRunApiBase(prepared.mode, prepared.apiBase),
+  };
 
   const companyId = target === "existing"
     ? (options.companyId?.trim() || await promptExistingCompanyId(paperclipOptions))

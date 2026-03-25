@@ -16,9 +16,8 @@ type TelemetryPreference = "enabled" | "disabled";
 
 interface TelemetryState {
   version: number;
-  preference: TelemetryPreference;
-  installId?: string;
-  installIdCreatedAt?: string;
+  installId: string;
+  installIdCreatedAt: string;
   updatedAt: string;
 }
 
@@ -38,17 +37,6 @@ export interface InstallTelemetryContext {
   companySlug?: string;
   sourceKind: SourceKind;
   target: "new" | "existing";
-}
-
-export interface TelemetryConsentPreview {
-  title: string;
-  body: string;
-}
-
-export interface PrepareInstallTelemetryOptions {
-  skipPrompts: boolean;
-  isTTY: boolean;
-  promptForConsent?: (preview: TelemetryConsentPreview) => Promise<boolean>;
 }
 
 function isCI(): boolean {
@@ -95,7 +83,7 @@ function readTelemetryState(): TelemetryState | null {
     if (parsed.version !== TELEMETRY_STATE_VERSION) {
       return null;
     }
-    if (parsed.preference !== "enabled" && parsed.preference !== "disabled") {
+    if (typeof parsed.installId !== "string" || typeof parsed.installIdCreatedAt !== "string") {
       return null;
     }
     if (typeof parsed.updatedAt !== "string") {
@@ -113,9 +101,15 @@ function writeTelemetryState(state: TelemetryState): void {
   writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
 }
 
-function ensureInstallId(state: TelemetryState): TelemetryState {
-  if (state.preference !== "enabled") {
-    return state;
+function ensureInstallId(state: TelemetryState | null): TelemetryState {
+  if (!state) {
+    const now = new Date().toISOString();
+    return {
+      version: TELEMETRY_STATE_VERSION,
+      installId: randomUUID(),
+      installIdCreatedAt: now,
+      updatedAt: now,
+    };
   }
 
   const createdAt = state.installIdCreatedAt ? Date.parse(state.installIdCreatedAt) : NaN;
@@ -129,41 +123,10 @@ function ensureInstallId(state: TelemetryState): TelemetryState {
 
   const now = new Date().toISOString();
   return {
-    ...state,
+    version: TELEMETRY_STATE_VERSION,
     installId: randomUUID(),
     installIdCreatedAt: now,
     updatedAt: now,
-  };
-}
-
-function buildPreview(context: {
-  app: string;
-  event: string;
-  companySlug?: string;
-  sourceKind: SourceKind;
-  target: "new" | "existing";
-  ingestUrl: string;
-}): TelemetryConsentPreview {
-  const companyLine = context.companySlug
-    ? `- company slug: \`${context.companySlug}\``
-    : "- company slug: not resolved, so no event will be sent";
-
-  return {
-    title: "Telemetry",
-    body: [
-      "If enabled, `companies.sh` will send one anonymous event after a successful import.",
-      "",
-      `- app: \`${context.app}\``,
-      `- event: \`${context.event}\``,
-      companyLine,
-      `- source kind: \`${context.sourceKind}\``,
-      `- target: \`${context.target}\``,
-      "- install id: pseudonymous UUID stored locally and rotated every 30 days",
-      "- repo URLs, local paths, company names, and command arguments are not sent",
-      `- endpoint: \`${context.ingestUrl}\``,
-      "",
-      "Telemetry stays disabled in CI and can be turned off later with `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1`.",
-    ].join("\n"),
   };
 }
 
@@ -359,7 +322,6 @@ async function resolveCompanySlug(source: string): Promise<string | undefined> {
 export async function prepareInstallTelemetry(
   source: string,
   target: "new" | "existing",
-  options: PrepareInstallTelemetryOptions,
 ): Promise<InstallTelemetryContext> {
   const ingestUrl = process.env.COMPANIES_TELEMETRY_INGEST_URL?.trim() || DEFAULT_TELEMETRY_INGEST_URL;
   const sourceKind = resolveSourceKind(source);
@@ -380,41 +342,11 @@ export async function prepareInstallTelemetry(
   }
 
   const explicitPreference = parseExplicitPreference(process.env.COMPANIES_TELEMETRY);
-  let state = readTelemetryState();
-
-  if (explicitPreference) {
-    state = ensureInstallId({
-      version: TELEMETRY_STATE_VERSION,
-      preference: explicitPreference,
-      installId: state?.installId,
-      installIdCreatedAt: state?.installIdCreatedAt,
-      updatedAt: new Date().toISOString(),
-    });
-    writeTelemetryState(state);
-  }
-
-  if (!state && !options.skipPrompts && options.isTTY && options.promptForConsent) {
-    const consented = await options.promptForConsent(buildPreview({
-      app: TELEMETRY_APP,
-      event: TELEMETRY_EVENT,
-      companySlug,
-      sourceKind,
-      target,
-      ingestUrl,
-    }));
-    state = ensureInstallId({
-      version: TELEMETRY_STATE_VERSION,
-      preference: consented ? "enabled" : "disabled",
-      updatedAt: new Date().toISOString(),
-    });
-    writeTelemetryState(state);
-  }
-
-  if (!state || state.preference !== "enabled") {
+  if (explicitPreference === "disabled") {
     return baseContext;
   }
 
-  state = ensureInstallId(state);
+  const state = ensureInstallId(readTelemetryState());
   writeTelemetryState(state);
 
   return {

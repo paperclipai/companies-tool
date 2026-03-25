@@ -103,11 +103,11 @@ Use these when the Paperclip CLI needs explicit connection or profile settings:
 
 `companies.sh` can send one anonymous event after a successful import to help us understand package adoption.
 
-- Telemetry is strict opt-in.
-- The first interactive `add` run shows a preview of the exact fields before anything is sent.
+- Telemetry is enabled by default and follows an opt-out model.
 - Telemetry stays disabled in CI environments.
 - The event payload uses a pseudonymous install id that rotates every 30 days.
 - Repo URLs, local paths, company names, and command arguments are not sent.
+- Set `DISABLE_TELEMETRY=1`, `DO_NOT_TRACK=1`, or `COMPANIES_TELEMETRY=0` to disable it.
 
 Successful import events include only:
 
@@ -117,7 +117,7 @@ Successful import events include only:
 - the source kind (`github`, `local`, or `url`)
 - the target mode (`new` or `existing`)
 
-Preference is stored locally at `~/.config/companies.sh/telemetry.json` unless `XDG_CONFIG_HOME` overrides the base path. Remove that file to reset consent or rotate the install id immediately.
+The install id is stored locally at `~/.config/companies.sh/telemetry.json` unless `XDG_CONFIG_HOME` overrides the base path. Remove that file to rotate the install id immediately.
 
 ## Package Layout
 
@@ -195,7 +195,7 @@ export COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000
 | `COMPANIES_PAPERCLIP_START_TIMEOUT_MS` | Override the local Paperclip readiness timeout in milliseconds. Default: `120000`. |
 | `COMPANIES_TELEMETRY`                  | Explicitly enable or disable telemetry. Accepted values: `1/0`, `true/false`, `on/off`. |
 | `COMPANIES_TELEMETRY_INGEST_URL`       | Override the telemetry ingest endpoint for testing. Default: `https://rusqrrg391.execute-api.us-east-1.amazonaws.com/ingest`. |
-| `DISABLE_TELEMETRY`                    | Disable telemetry regardless of saved preference.                                  |
+| `DISABLE_TELEMETRY`                    | Disable telemetry regardless of the default behavior.                              |
 | `DO_NOT_TRACK`                         | Alternative way to disable telemetry.                                              |
 
 ## Contributing
