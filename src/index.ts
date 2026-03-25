@@ -311,13 +311,7 @@ async function preparePaperclipWithConnection(
     }
 
     if (!options.yes) {
-      note(
-        [
-          "Starting local Paperclip before import.",
-          "If Paperclip is not configured yet, companies.sh will bootstrap it before importing.",
-        ].join("\n"),
-        "Preparing Paperclip",
-      );
+      note("Starting local Paperclip", "Preparing Paperclip");
     }
 
     return {
@@ -366,9 +360,7 @@ export function buildAddPaperclipArgs(input: {
   if (input.dryRun) {
     args.push("--dry-run");
   }
-  if (input.yes) {
-    args.push("--yes");
-  }
+  args.push("--yes");
 
   return args;
 }

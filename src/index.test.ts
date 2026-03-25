@@ -48,6 +48,30 @@ test("buildAddPaperclipArgs translates wrapper add options to paperclip import a
   );
 });
 
+test("buildAddPaperclipArgs auto-applies imports through the wrapped paperclip command", () => {
+  assert.deepEqual(
+    buildAddPaperclipArgs({
+      source: "./fixtures/company",
+      includeArg: "company,agents",
+      target: "new",
+    }),
+    [
+      "company",
+      "import",
+      "./fixtures/company",
+      "--include",
+      "company,agents",
+      "--target",
+      "new",
+      "--agents",
+      "all",
+      "--collision",
+      "rename",
+      "--yes",
+    ],
+  );
+});
+
 test("buildListPaperclipArgs returns the company list command", () => {
   assert.deepEqual(buildListPaperclipArgs(), ["company", "list"]);
 });

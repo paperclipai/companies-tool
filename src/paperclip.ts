@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import pc from "picocolors";
 
 export interface CommonPaperclipOptions {
@@ -110,11 +111,11 @@ export function sanitizePaperclipChildEnv(env: NodeJS.ProcessEnv): NodeJS.Proces
 
 export function resolvePaperclipCommand(raw = process.env.PAPERCLIPAI_CMD?.trim()): PaperclipCommand {
   if (!raw) {
-    const bundledBin = resolveBundledPaperclipBin();
-    if (bundledBin) {
+    const bundledShim = resolveBundledPaperclipShim();
+    if (bundledShim) {
       return {
         command: process.execPath,
-        prefixArgs: [bundledBin],
+        prefixArgs: [bundledShim],
       };
     }
 
@@ -462,21 +463,17 @@ async function waitForPaperclipApi(apiBase: string, timeoutMs = resolvePaperclip
   );
 }
 
-function resolveBundledPaperclipBin(): string | null {
+function resolveBundledPaperclipShim(): string | null {
   try {
-    const packageJsonPath = require.resolve("paperclipai/package.json");
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
-      bin?: string | Record<string, string>;
-    };
-    const rawBin = typeof packageJson.bin === "string"
-      ? packageJson.bin
-      : packageJson.bin?.paperclipai ?? Object.values(packageJson.bin ?? {})[0];
-
-    if (!rawBin) {
+    require.resolve("paperclipai/package.json");
+    const shimPath = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "paperclip-shim.js",
+    );
+    if (!fs.existsSync(shimPath)) {
       return null;
     }
-
-    return path.resolve(path.dirname(packageJsonPath), rawBin);
+    return shimPath;
   } catch {
     return null;
   }
