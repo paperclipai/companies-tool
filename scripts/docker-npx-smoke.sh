@@ -91,9 +91,9 @@ if command -v paperclipai >/dev/null 2>&1; then
 fi
 
 DATA_DIR="$(mktemp -d "$TMPDIR/companies-docker-npx.XXXXXX")"
-COMPANY_NAME="Docker NPX Smoke Company"
+COMPANY_NAME="GStack"
 
-if ! npx companies.sh add paperclipai/companies/gstack --yes --data-dir "$DATA_DIR" --target new --new-company-name "$COMPANY_NAME"; then
+if ! npx companies.sh add paperclipai/companies/gstack --yes --data-dir "$DATA_DIR" --target new; then
   if [[ -f /app/paperclipai-npx.log ]]; then
     cat /app/paperclipai-npx.log >&2
   fi

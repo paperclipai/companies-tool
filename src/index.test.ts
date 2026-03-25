@@ -10,7 +10,6 @@ import {
   isDirectCliInvocation,
   pickProvider,
   promptPaperclipConnection,
-  promptNewCompanyName,
   promptSource,
   promptTargetMode,
   resolvePaperclipRunApiBase,
@@ -82,10 +81,6 @@ test("pickProvider defaults to paperclip in non-interactive mode", async () => {
 
 test("promptTargetMode defaults to new in non-interactive mode", async () => {
   assert.equal(await promptTargetMode(undefined, true), "new");
-});
-
-test("promptNewCompanyName skips the prompt in non-interactive mode", async () => {
-  assert.equal(await promptNewCompanyName(undefined, true), undefined);
 });
 
 test("promptSource fails fast in non-interactive mode when no source is provided", async () => {

@@ -21,16 +21,15 @@ pnpm build
 node dist/index.js add ./fixtures/minimal-company \
   --connection custom-url \
   --api-base http://127.0.0.1:3100 \
-  --target new \
-  --new-company-name "Companies Local Hand Test"
+  --target new
 ```
 
-Then open `http://127.0.0.1:3100` in the browser and confirm that **Companies Local Hand Test** appears in the company list.
+Then open `http://127.0.0.1:3100` in the browser and confirm that **Minimal Company** appears in the company list.
 
 If you want the wrapper to manage local bootstrap for you instead, run:
 
 ```bash
-node dist/index.js add ./fixtures/minimal-company --target new --new-company-name "Companies Local Hand Test"
+node dist/index.js add ./fixtures/minimal-company --target new
 ```
 
 That path uses the bundled `paperclipai` canary, runs `paperclipai onboard --yes` when needed, and starts the local server automatically before importing.
@@ -93,7 +92,7 @@ chmod +x /app/companies.sh
 ln -s /app/companies.sh /app/companies
 export PATH="/app:$PATH"
 DATA_DIR=$(mktemp -d "$TMPDIR/companies-docker-handtest.XXXXXX")
-companies.sh add ./fixtures/minimal-company --yes --data-dir "$DATA_DIR" --target new --new-company-name "Docker Hand Test"
+companies.sh add ./fixtures/minimal-company --yes --data-dir "$DATA_DIR" --target new
 companies.sh list --yes --data-dir "$DATA_DIR"
 node --input-type=module -e 'const response = await fetch("http://127.0.0.1:3210/"); console.log(response.status);'
 ```

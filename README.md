@@ -71,7 +71,6 @@ npx companies.sh add ./my-company
 | `-p, --provider <provider>` | Destination orchestrator. Default: `paperclip`.                                              |
 | `--target <mode>`           | Import into a `new` or `existing` Paperclip company.                                         |
 | `-C, --company-id <id>`     | Optional target company id for `--target existing`; omit it to choose from the Paperclip company list. |
-| `--new-company-name <name>` | Override the imported company name when using `--target new`.                                |
 | `--include <values>`        | Comma-separated subset of `company,agents,projects,tasks,skills`. Default: `company,agents`. |
 | `--agents <list>`           | Comma-separated agent slugs to import, or `all`. Default: `all`.                             |
 | `--collision <mode>`        | Collision strategy: `rename`, `skip`, or `replace`. Default: `rename`.                       |

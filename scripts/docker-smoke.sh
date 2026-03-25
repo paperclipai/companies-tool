@@ -94,9 +94,9 @@ ln -s /app/companies.sh /app/companies
 export PATH="/app:$PATH"
 
 DATA_DIR="$(mktemp -d "$TMPDIR/companies-docker-smoke.XXXXXX")"
-COMPANY_NAME="Docker Smoke Company"
+COMPANY_NAME="Minimal Company"
 
-if ! companies.sh add ./fixtures/minimal-company --yes --data-dir "$DATA_DIR" --target new --new-company-name "$COMPANY_NAME"; then
+if ! companies.sh add ./fixtures/minimal-company --yes --data-dir "$DATA_DIR" --target new; then
   if [[ -f /app/paperclipai.log ]]; then
     cat /app/paperclipai.log >&2
   fi

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { intro, outro, select, text, confirm, isCancel, cancel, note } from "@clack/prompts";
+import { intro, outro, select, text, isCancel, cancel, note } from "@clack/prompts";
 import { Command } from "commander";
 import pc from "picocolors";
 import { readFileSync, realpathSync } from "node:fs";
@@ -42,7 +42,6 @@ interface BaseOptions extends CommonPaperclipOptions {
 interface AddOptions extends BaseOptions {
   include?: string;
   target?: TargetMode;
-  newCompanyName?: string;
   agents?: string;
   collision?: CollisionMode;
   dryRun?: boolean;
@@ -252,27 +251,6 @@ async function promptExistingCompanyId(options: BaseOptions): Promise<string> {
   return coerceCancel(picked).trim();
 }
 
-export async function promptNewCompanyName(
-  current: string | undefined,
-  skipPrompts: boolean,
-): Promise<string | undefined> {
-  if (current?.trim()) return current.trim();
-  if (skipPrompts) return undefined;
-
-  const shouldOverride = await confirm({
-    message: "Override the imported company name?",
-    initialValue: false,
-  });
-
-  if (!coerceCancel(shouldOverride)) return undefined;
-
-  const result = await text({
-    message: "New company name",
-    placeholder: "Imported Company",
-  });
-  return coerceCancel(result).trim() || undefined;
-}
-
 export function resolvePaperclipRunApiBase(
   mode: ConnectionMode,
   apiBase: string,
@@ -333,7 +311,6 @@ export function buildAddPaperclipArgs(input: {
   agents?: string;
   collision?: CollisionMode;
   companyId?: string;
-  newCompanyName?: string;
   dryRun?: boolean;
   yes?: boolean;
 }): string[] {
@@ -353,9 +330,6 @@ export function buildAddPaperclipArgs(input: {
 
   if (input.companyId) {
     args.push("--company-id", input.companyId);
-  }
-  if (input.newCompanyName) {
-    args.push("--new-company-name", input.newCompanyName);
   }
   if (input.dryRun) {
     args.push("--dry-run");
@@ -386,10 +360,6 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
 
   const telemetry = await prepareInstallTelemetry(normalizedSource, target);
 
-  const newCompanyName = target === "new"
-    ? await promptNewCompanyName(options.newCompanyName, Boolean(options.yes))
-    : undefined;
-
   const prepared = await preparePaperclipWithConnection(connection, options);
   const paperclipOptions: AddOptions = {
     ...options,
@@ -407,7 +377,6 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
     agents: options.agents,
     collision: options.collision,
     companyId,
-    newCompanyName,
     dryRun: options.dryRun,
     yes: options.yes,
   });
@@ -461,7 +430,6 @@ addCommonOptions(
     .option("--connection <mode>", "Paperclip connection mode: auto | custom-url")
     .option("--include <values>", INCLUDE_OPTION_DESCRIPTION, "company,agents")
     .option("--target <mode>", "Import target: new | existing")
-    .option("--new-company-name <name>", "Name override when creating a new company")
     .option("--agents <list>", "Comma-separated agent slugs to import, or all", "all")
     .option("--collision <mode>", "Collision strategy: rename | skip | replace", "rename")
     .option("--dry-run", "Preview the import without applying it", false)
