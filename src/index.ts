@@ -312,11 +312,11 @@ export function buildAddPaperclipArgs(input: {
   collision?: CollisionMode;
   companyId?: string;
   dryRun?: boolean;
-  yes?: boolean;
 }): string[] {
   const args = [
     "company",
     "import",
+    "--from",
     input.source,
     "--include",
     input.includeArg,
@@ -334,7 +334,6 @@ export function buildAddPaperclipArgs(input: {
   if (input.dryRun) {
     args.push("--dry-run");
   }
-  args.push("--yes");
 
   return args;
 }
@@ -378,7 +377,6 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
     collision: options.collision,
     companyId,
     dryRun: options.dryRun,
-    yes: options.yes,
   });
 
   note(
