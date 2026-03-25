@@ -105,13 +105,13 @@ git push origin refs/tags/vYYYY.MDD.P
 
 ## Dependency Policy
 
-`companies.sh` currently pins `paperclipai@2026.324.0-canary.7`.
+`companies.sh` depends on `paperclipai@latest`, so fresh installs resolve the current stable Paperclip release.
 
 That means:
 
-- canary publishes are expected to track Paperclip canaries
-- a stable `companies.sh` release is still allowed when it has been validated against the pinned Paperclip build
-- when Paperclip stable contains the required company import/export features, update the dependency and continue promoting stable releases normally
+- canary publishes should still be validated against the current Paperclip canary when a change depends on unreleased Paperclip behavior
+- stable `companies.sh` releases track the npm `latest` Paperclip dist-tag by default
+- if a future `companies.sh` change needs unreleased Paperclip behavior again, pin or override deliberately instead of relying on `latest`
 
 ## Smoke Checks
 

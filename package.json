@@ -45,7 +45,7 @@
   "dependencies": {
     "@clack/prompts": "^0.10.1",
     "commander": "^13.1.0",
-    "paperclipai": "2026.324.0-canary.7",
+    "paperclipai": "latest",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {

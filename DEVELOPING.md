@@ -32,7 +32,7 @@ If you want the wrapper to manage local bootstrap for you instead, run:
 node dist/index.js add ./fixtures/minimal-company --target new
 ```
 
-That path uses the bundled `paperclipai` canary, runs `paperclipai onboard --yes` when needed, and starts the local server automatically before importing.
+That path uses the bundled stable `paperclipai` release, runs `paperclipai onboard --yes` when needed, and starts the local server automatically before importing.
 
 ## Hand-Test Against A Docker Paperclip Instance
 

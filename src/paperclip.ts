@@ -43,7 +43,7 @@ export interface PaperclipBootstrapResult {
 }
 
 export const DEFAULT_PAPERCLIP_API_BASE = "http://127.0.0.1:3100";
-export const MINIMUM_PAPERCLIP_VERSION = "2026.324.0-canary.0";
+export const MINIMUM_PAPERCLIP_VERSION = "2026.318.0";
 export const DEFAULT_PAPERCLIP_READY_TIMEOUT_MS = 120_000;
 
 const require = createRequire(import.meta.url);
@@ -301,7 +301,7 @@ export async function ensurePaperclipVersion(): Promise<string> {
   if (!isPaperclipVersionSupported(version)) {
     throw new Error(
       `companies.sh requires paperclipai ${MINIMUM_PAPERCLIP_VERSION} or newer. Found ${version}. ` +
-      "Install a newer paperclipai canary or point PAPERCLIPAI_CMD at a newer build.",
+      "Install a newer stable paperclipai release or point PAPERCLIPAI_CMD at a newer build.",
     );
   }
   return version;
