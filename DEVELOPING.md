@@ -121,6 +121,8 @@ su node -s /bin/bash
 npx companies.sh@canary add paperclipai/companies/gstack
 ```
 
+Run that `npx` command as `node`, not `root`. Local Paperclip bootstrap uses embedded services that can stall under Linux root sessions, so `companies.sh` now fails fast there and tells you to switch users instead of waiting forever.
+
 Expected interactive flow:
 
 - pick `paperclip`

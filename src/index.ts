@@ -280,6 +280,21 @@ export function resolvePaperclipRunApiBase(
   return mode === "custom-url" ? apiBase : undefined;
 }
 
+export function getUnsupportedAutoBootstrapMessage(
+  platform = process.platform,
+  uid = process.getuid?.(),
+): string | undefined {
+  if (platform === "linux" && uid === 0) {
+    return [
+      "Automatic local Paperclip bootstrap is not supported when this command runs as root on Linux.",
+      "Run it as a regular user instead (for Docker hand-tests, `su node -s /bin/bash` first),",
+      "or connect to an existing Paperclip instance with --connection custom-url --api-base <url>.",
+    ].join(" ");
+  }
+
+  return undefined;
+}
+
 async function preparePaperclip(options: BaseOptions): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
   const connection = await promptPaperclipConnection(options);
   return preparePaperclipWithConnection(connection, options);
@@ -290,11 +305,16 @@ async function preparePaperclipWithConnection(
   options: BaseOptions,
 ): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
   if (connection.mode === "auto") {
+    const unsupportedMessage = getUnsupportedAutoBootstrapMessage();
+    if (unsupportedMessage) {
+      throw new Error(unsupportedMessage);
+    }
+
     if (!options.yes) {
       note(
         [
           "Starting local Paperclip before import.",
-          "The first Docker run can take a while because Paperclip needs to onboard and boot.",
+          "If Paperclip is not configured yet, companies.sh will bootstrap it before importing.",
         ].join("\n"),
         "Preparing Paperclip",
       );

@@ -6,6 +6,7 @@ import test from "node:test";
 import {
   buildAddPaperclipArgs,
   buildListPaperclipArgs,
+  getUnsupportedAutoBootstrapMessage,
   isDirectCliInvocation,
   pickProvider,
   promptPaperclipConnection,
@@ -81,6 +82,15 @@ test("promptPaperclipConnection treats apiBase as custom-url", async () => {
 test("resolvePaperclipRunApiBase only forwards apiBase for custom-url mode", () => {
   assert.equal(resolvePaperclipRunApiBase("auto", "http://127.0.0.1:3100"), undefined);
   assert.equal(resolvePaperclipRunApiBase("custom-url", "http://localhost:3100"), "http://localhost:3100");
+});
+
+test("getUnsupportedAutoBootstrapMessage blocks linux root auto bootstrap", () => {
+  assert.match(
+    getUnsupportedAutoBootstrapMessage("linux", 0) ?? "",
+    /not supported when this command runs as root on Linux/,
+  );
+  assert.equal(getUnsupportedAutoBootstrapMessage("linux", 1000), undefined);
+  assert.equal(getUnsupportedAutoBootstrapMessage("darwin", 0), undefined);
 });
 
 test("isDirectCliInvocation treats npm bin symlinks as direct execution", () => {
