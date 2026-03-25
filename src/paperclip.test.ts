@@ -177,13 +177,14 @@ test("resolveCompanySelector matches company issue prefix via company list looku
 test("comparePaperclipVersions handles canary prereleases", () => {
   assert.equal(comparePaperclipVersions("2026.324.0-canary.2", "2026.324.0-canary.0") > 0, true);
   assert.equal(comparePaperclipVersions("2026.324.0", "2026.324.0-canary.9") > 0, true);
-  assert.equal(comparePaperclipVersions("2026.318.0", "2026.324.0-canary.0") < 0, true);
+  assert.equal(comparePaperclipVersions("2026.324.9", "2026.325.0-canary.0") < 0, true);
 });
 
 test("isPaperclipVersionSupported enforces the minimum stable gate", () => {
-  assert.equal(isPaperclipVersionSupported("2026.318.0"), true);
-  assert.equal(isPaperclipVersionSupported("2026.325.0-canary.1"), true);
-  assert.equal(isPaperclipVersionSupported("2026.317.9"), false);
+  assert.equal(isPaperclipVersionSupported("2026.325.0"), true);
+  assert.equal(isPaperclipVersionSupported("2026.325.1-canary.1"), true);
+  assert.equal(isPaperclipVersionSupported("2026.325.0-canary.1"), false);
+  assert.equal(isPaperclipVersionSupported("2026.324.9"), false);
 });
 
 test("resolveLocalPaperclipConnection uses a discovered project config when present", () => {

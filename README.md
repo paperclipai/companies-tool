@@ -96,7 +96,7 @@ Use these when the Paperclip CLI needs explicit connection or profile settings:
 - `auto` is the default. It checks the local Paperclip config, falls back to `http://127.0.0.1:3100`, runs `paperclipai onboard --yes` when no config exists yet, and starts `paperclipai run` if the server is not already up.
 - `custom-url` skips the local bootstrap and expects a reachable Paperclip instance at `--api-base`.
 
-`companies.sh` requires a recent Paperclip build for the company import flow. Fresh installs resolve `paperclipai@latest`, and the wrapper rejects versions older than `2026.318.0`.
+`companies.sh` requires a recent Paperclip build for the company import flow. Fresh installs resolve a bundled `paperclipai` release from `^2026.325.0`, and the wrapper rejects versions older than `2026.325.0`.
 
 ## Telemetry
 
@@ -168,7 +168,7 @@ export PAPERCLIPAI_CMD=/path/to/paperclipai
 export PAPERCLIPAI_CMD="pnpm --dir /path/to/paperclip paperclipai"
 ```
 
-If you override the command, `companies.sh` still requires `paperclipai >= 2026.318.0`.
+If you override the command, `companies.sh` still requires `paperclipai >= 2026.325.0`.
 
 ### Import fails with collision errors
 

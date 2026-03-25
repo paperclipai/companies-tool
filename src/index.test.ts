@@ -25,11 +25,11 @@ test("buildAddPaperclipArgs translates wrapper add options to paperclip import a
       collision: "replace",
       companyId: "company-123",
       dryRun: true,
+      yes: true,
     }),
     [
       "company",
       "import",
-      "--from",
       "./fixtures/company",
       "--include",
       "company,agents,projects,issues,skills",
@@ -42,6 +42,7 @@ test("buildAddPaperclipArgs translates wrapper add options to paperclip import a
       "--company-id",
       "company-123",
       "--dry-run",
+      "--yes",
     ],
   );
 });
@@ -56,7 +57,6 @@ test("buildAddPaperclipArgs auto-applies imports through the wrapped paperclip c
     [
       "company",
       "import",
-      "--from",
       "./fixtures/company",
       "--include",
       "company,agents",

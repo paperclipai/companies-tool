@@ -43,7 +43,7 @@ export interface PaperclipBootstrapResult {
 }
 
 export const DEFAULT_PAPERCLIP_API_BASE = "http://127.0.0.1:3100";
-export const MINIMUM_PAPERCLIP_VERSION = "2026.318.0";
+export const MINIMUM_PAPERCLIP_VERSION = "2026.325.0";
 export const DEFAULT_PAPERCLIP_READY_TIMEOUT_MS = 120_000;
 
 const require = createRequire(import.meta.url);
