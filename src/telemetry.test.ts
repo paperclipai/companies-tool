@@ -75,6 +75,7 @@ test("prepareInstallTelemetry is enabled by default and resolves a local company
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
     CI: undefined,
+    GITHUB_ACTIONS: undefined,
   }, async () => {
     const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new");
 
@@ -99,6 +100,7 @@ test("prepareInstallTelemetry disables telemetry when COMPANIES_TELEMETRY=0", as
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
     CI: undefined,
+    GITHUB_ACTIONS: undefined,
   }, async () => {
     const telemetry = await prepareInstallTelemetry("./fixtures/minimal-company", "new");
 
@@ -124,6 +126,7 @@ test("prepareInstallTelemetry resolves GitHub company slugs via the GitHub conte
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
     CI: undefined,
+    GITHUB_ACTIONS: undefined,
   }, async () => {
     await withMockFetch(async (input) => {
       const url = String(input);
@@ -169,6 +172,7 @@ test("prepareInstallTelemetry resolves GitHub company slugs from owner/repo/path
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
     CI: undefined,
+    GITHUB_ACTIONS: undefined,
   }, async () => {
     await withMockFetch(async (input) => {
       const url = String(input);
@@ -204,6 +208,7 @@ test("prepareInstallTelemetry disables telemetry in CI even when explicitly enab
     XDG_CONFIG_HOME: configHome,
     COMPANIES_TELEMETRY: "1",
     CI: "true",
+    GITHUB_ACTIONS: undefined,
     DISABLE_TELEMETRY: undefined,
     DO_NOT_TRACK: undefined,
   }, async () => {
