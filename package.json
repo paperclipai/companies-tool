@@ -16,6 +16,7 @@
     "dev": "tsx src/index.ts",
     "prepack": "pnpm build",
     "test:docker": "./scripts/docker-smoke.sh",
+    "test:docker:npx": "./scripts/docker-npx-smoke.sh",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --test src/*.test.ts"
   },

@@ -43,6 +43,14 @@ Use this when you want the automated clean-room Docker smoke test. It packages t
 pnpm test:docker
 ```
 
+If you specifically want the vanilla `npx` install path in Docker, run:
+
+```bash
+pnpm test:docker:npx
+```
+
+That smoke test starts from a clean Node 20 container and runs the current local tarball through `npx`, using the public `paperclipai/companies/gstack` source to verify the install path end to end.
+
 If you want a manual shell inside the same clean-room setup, run:
 
 ```bash
@@ -50,11 +58,9 @@ tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/companies-docker-handtest.XXXXXX")"
 pnpm pack --pack-destination "$tmpdir"
 tar -xzf "$tmpdir"/companies.sh-*.tgz -C "$tmpdir"
 cp -R fixtures "$tmpdir/package/fixtures"
+chmod -R a+rwx "$tmpdir"
 
 docker run --rm -it \
-  -e HOME=/app/.home \
-  -e npm_config_cache=/app/.npm-cache \
-  -e TMPDIR=/app/.tmp \
   -e COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000 \
   -e HOST=127.0.0.1 \
   -e PORT=3210 \
@@ -69,8 +75,17 @@ docker run --rm -it \
 Inside that shell:
 
 ```bash
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates locales
+sed -i '/en_US.UTF-8/s/^# //' /etc/locale.gen
+locale-gen
+su node -s /bin/bash
+
+export HOME=/app/.home
+export npm_config_cache=/app/.npm-cache
+export TMPDIR=/tmp
 mkdir -p "$HOME" "$npm_config_cache"
-mkdir -p "$TMPDIR"
 npm install --omit=dev --no-audit --no-fund
 command -v paperclipai && exit 1
 printf '%s\n' '#!/usr/bin/env bash' 'exec node /app/dist/index.js "$@"' >/app/companies.sh
@@ -84,6 +99,36 @@ node --input-type=module -e 'const response = await fetch("http://127.0.0.1:3210
 ```
 
 That loopback binding is intentional: Paperclip quickstart uses `local_trusted`, which requires `127.0.0.1` inside the container. The automated smoke test verifies the UI over container-local HTTP rather than Docker port publishing.
+
+## Hand-Test The Published Canary In Vanilla Docker
+
+Use this when you want to manually exercise the exact published-canary style flow from a plain `node:20-bookworm-slim` shell.
+
+```bash
+docker run --rm -it node:20-bookworm-slim bash
+```
+
+Inside that shell:
+
+```bash
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates locales
+sed -i '/en_US.UTF-8/s/^# //' /etc/locale.gen
+locale-gen
+su node -s /bin/bash
+
+npx companies.sh@canary add paperclipai/companies/gstack
+```
+
+Expected interactive flow:
+
+- pick `paperclip`
+- pick `auto`
+- pick the target company mode you want, usually `new`
+- wait for the local Paperclip bootstrap note to finish on first run
+
+The important behavior is that the CLI should keep advancing after `auto` instead of appearing to stall there. On a fresh container the first bootstrap can still take a while, but the prompt flow now reaches the target selection before local Paperclip startup begins.
 
 ## Dry-Run Smoke Test
 

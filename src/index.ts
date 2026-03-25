@@ -282,6 +282,13 @@ export function resolvePaperclipRunApiBase(
 
 async function preparePaperclip(options: BaseOptions): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
   const connection = await promptPaperclipConnection(options);
+  return preparePaperclipWithConnection(connection, options);
+}
+
+async function preparePaperclipWithConnection(
+  connection: { mode: ConnectionMode; apiBase?: string },
+  options: BaseOptions,
+): Promise<PaperclipBootstrapResult & { mode: ConnectionMode }> {
   if (connection.mode === "auto") {
     if (!options.yes) {
       note(
@@ -361,12 +368,17 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
   const include = normalizeIncludeValues(options.include);
   printWarnings(include.warnings);
 
+  const connection = await promptPaperclipConnection(options);
   const normalizedSource = await promptSource(source, Boolean(options.yes));
   const target = await promptTargetMode(options.target, Boolean(options.yes));
 
   const telemetry = await prepareInstallTelemetry(normalizedSource, target);
 
-  const prepared = await preparePaperclip(options);
+  const newCompanyName = target === "new"
+    ? await promptNewCompanyName(options.newCompanyName, Boolean(options.yes))
+    : undefined;
+
+  const prepared = await preparePaperclipWithConnection(connection, options);
   const paperclipOptions: AddOptions = {
     ...options,
     apiBase: resolvePaperclipRunApiBase(prepared.mode, prepared.apiBase),
@@ -374,9 +386,6 @@ export async function handleAdd(source: string | undefined, options: AddOptions)
 
   const companyId = target === "existing"
     ? (options.companyId?.trim() || await promptExistingCompanyId(paperclipOptions))
-    : undefined;
-  const newCompanyName = target === "new"
-    ? await promptNewCompanyName(options.newCompanyName, Boolean(options.yes))
     : undefined;
 
   const args = buildAddPaperclipArgs({
