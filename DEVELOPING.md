@@ -99,13 +99,42 @@ node --input-type=module -e 'const response = await fetch("http://127.0.0.1:3210
 
 That loopback binding is intentional: Paperclip quickstart uses `local_trusted`, which requires `127.0.0.1` inside the container. The automated smoke test verifies the UI over container-local HTTP rather than Docker port publishing.
 
+### Viewing the Paperclip UI from your host browser
+
+The default manual shell setup binds to `127.0.0.1` inside the container, which means the host cannot reach it. To open the Paperclip UI in your host browser you need two changes:
+
+1. **Bind to all interfaces** — set `HOST=0.0.0.0` so Paperclip listens on the container's external interface, not just loopback.
+2. **Publish the port** — add `-p 3210:3210` to the `docker run` command so Docker forwards host traffic into the container.
+
+```bash
+docker run --rm -it \
+  -e COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000 \
+  -e HOST=0.0.0.0 \
+  -e PORT=3210 \
+  -e SERVE_UI=true \
+  -e PAPERCLIP_OPEN_ON_LISTEN=false \
+  -p 3210:3210 \
+  -v "$tmpdir/package:/app" \
+  -w /app \
+  node:20-bookworm-slim \
+  bash
+```
+
+After running the setup steps inside the container, open `http://localhost:3210` on your host machine. The `companies.sh` CLI resolves `HOST=0.0.0.0` to `127.0.0.1` internally for its own API calls, so the import flow still works as expected.
+
 ## Hand-Test The Published Canary In Vanilla Docker
 
 Use this when you want to manually exercise the exact published-canary style flow from a plain `node:20-bookworm-slim` shell.
 
 ```bash
-docker run --rm -it node:20-bookworm-slim bash
+docker run --rm -it \
+  -e HOST=0.0.0.0 \
+  -e PORT=3210 \
+  -p 3210:3210 \
+  node:20-bookworm-slim bash
 ```
+
+If you don't need host-browser access, a plain `docker run --rm -it node:20-bookworm-slim bash` works — the UI will only be reachable inside the container.
 
 Inside that shell:
 
