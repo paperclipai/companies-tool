@@ -53,6 +53,11 @@ export HOME=/app/.home
 export npm_config_cache=/app/.npm-cache
 export TMPDIR=/tmp
 
+if [[ "$(id -u)" -eq 0 ]]; then
+  echo "docker-npx-smoke must run the companies.sh command as a non-root user" >&2
+  exit 1
+fi
+
 mkdir -p "$HOME" "$npm_config_cache"
 npm install --no-save --omit=dev ./companies.sh-local.tgz >/dev/null
 

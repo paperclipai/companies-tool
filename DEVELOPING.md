@@ -49,7 +49,7 @@ If you specifically want the vanilla `npx` install path in Docker, run:
 pnpm test:docker:npx
 ```
 
-That smoke test starts from a clean Node 20 container and runs the current local tarball through `npx`, using the public `paperclipai/companies/gstack` source to verify the install path end to end.
+That smoke test starts from a clean Node 20 container, installs only the Debian prerequisites, switches to the non-root `node` user, and runs the current local tarball through `npx`. It verifies the full success condition end to end: no standalone `paperclipai` on `PATH`, `npx companies.sh add ...` bootstraps local Paperclip, imports `paperclipai/companies/gstack`, lists the imported company, and serves the Paperclip UI over container-local HTTP.
 
 If you want a manual shell inside the same clean-room setup, run:
 
@@ -119,6 +119,7 @@ locale-gen
 su node -s /bin/bash
 
 npx companies.sh@canary add paperclipai/companies/gstack
+npx companies.sh@canary list
 ```
 
 Run that `npx` command as `node`, not `root`. Local Paperclip bootstrap uses embedded services that can stall under Linux root sessions, so `companies.sh` now fails fast there and tells you to switch users instead of waiting forever.
@@ -129,6 +130,7 @@ Expected interactive flow:
 - pick `auto`
 - pick the target company mode you want, usually `new`
 - wait for the local Paperclip bootstrap note to finish on first run
+- confirm the imported company appears in `npx companies.sh@canary list`
 
 The important behavior is that the CLI should keep advancing after `auto` instead of appearing to stall there. On a fresh container the first bootstrap can still take a while, but the prompt flow now reaches the target selection before local Paperclip startup begins.
 
