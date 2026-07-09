@@ -213,6 +213,7 @@ export COMPANIES_PAPERCLIP_START_TIMEOUT_MS=180000
 - [Agent Companies Specification](https://companies.io)
 - [Browse Companies](https://companies.sh)
 - [Paperclip](https://paperclip.ing)
+- [Paperclip Documentation](https://docs.paperclip.ing)
 
 ## Contributing
 
